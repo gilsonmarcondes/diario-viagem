@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diário de Viagem - V4.1 (Reordenar Dias)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { 'primary': '#4F46E5', 'secondary': '#10B981', 'accent': '#F59E0B' }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #1f2937; -webkit-print-color-adjust: exact; }
+        .card { background: white; border-radius: 0.75rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s; font-size: 0.875rem; }
+        .btn-primary { background-color: #4F46E5; color: white; }
+        .btn-primary:hover { background-color: #4338ca; }
+        .btn-secondary { background-color: #10B981; color: white; }
+        .btn-secondary:hover { background-color: #059669; }
+        .btn-ghost { background-color: white; color: #374151; border: 1px solid #e5e7eb; }
+        .btn-ghost:hover { background-color: #f9fafb; }
+        .icon { width: 1.25rem; height: 1.25rem; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 50; backdrop-filter: blur(2px); }
+        .hidden { display: none !important; }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @media print {
+            body { background-color: white; padding: 0; }
+            .no-print, .btn, .modal, button, select, .sticky { display: none !important; }
+            .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; margin-bottom: 20px; }
+            #app { max-width: 100%; padding: 0; }
+            textarea { border: none; resize: none; overflow: hidden; height: auto; }
+            .bg-blue-50, .bg-indigo-50, .bg-gray-50, .bg-yellow-50, .bg-red-50 { background-color: white !important; border: 1px solid #eee; }
+            input[type="date"] { border: none; background: transparent; }
+        }
+    </style>
+</head>
+<body class="pb-20">
+
+    <div id="app" class="max-w-5xl mx-auto p-4 md:p-6"></div>
+
+    <script>
+        const ICONS = {
+            home: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
+            save: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>`,
+            back: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>`,
+            edit: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`,
+            trash: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>`,
+            plus: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>`,
+            money: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+            search: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>`,
+            copy: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`
+        };
+    </script>
+
+    <div id="hotelModal" class="modal hidden">
+        <div class="card w-96 p-6 animate-fade-in">
+            <h3 class="text-xl font-bold mb-4 text-primary">Gerenciar Hotel</h3>
+            <form onsubmit="window.saveHotelForm(event)" class="space-y-4">
+                <div><label class="text-xs font-bold text-gray-500 uppercase">Nome</label><input type="text" id="hotelName" required class="w-full border rounded p-2"></div>
+                <div><label class="text-xs font-bold text-gray-500 uppercase">Link Mapa</label><input type="url" id="hotelLocation" class="w-full border rounded p-2"></div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="document.getElementById('hotelModal').classList.add('hidden')" class="btn btn-ghost">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="kmlModal" class="modal hidden">
+        <div class="card w-96 p-6 animate-fade-in">
+            <h3 class="text-xl font-bold mb-4 text-primary">Mapa KML</h3>
+            <form onsubmit="window.saveKmlForm(event)" class="space-y-4">
+                <p class="text-sm text-gray-500">URL pública do KML/KMZ (Google MyMaps).</p>
+                <input type="url" id="kmlUrl" class="w-full border rounded p-2" placeholder="https://...">
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="document.getElementById('kmlModal').classList.add('hidden')" class="btn btn-ghost">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="attractionModal" class="modal hidden">
+        <div class="card w-full max-w-lg p-6 animate-fade-in m-4 max-h-[90vh] overflow-y-auto">
+            <h3 id="attModalTitle" class="text-xl font-bold mb-4 text-primary">Atração</h3>
+            <form onsubmit="window.saveAttractionForm(event)" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2 md:col-span-1"><label class="text-xs font-bold text-gray-500 uppercase">Nome</label><input type="text" id="attName" required class="w-full border rounded p-2 font-bold"></div>
+                    <div class="col-span-2 md:col-span-1"><label class="text-xs font-bold text-gray-500 uppercase">Horário</label><input type="text" id="attHours" placeholder="09:00 - 18:00" class="w-full border rounded p-2"></div>
+                </div>
+                <div><label class="text-xs font-bold text-gray-500 uppercase">Descrição</label><textarea id="attDesc" rows="3" class="w-full border rounded p-2"></textarea></div>
+                
+                <div class="bg-gray-50 p-4 rounded border">
+                    <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Custos</label>
+                    <ul id="attCostsList" class="space-y-2 mb-3 text-sm"></ul>
+                    <div class="flex gap-2 items-end">
+                        <input type="text" id="newCostName" placeholder="Item" class="w-full border rounded p-1 text-sm">
+                        <select id="newCostCurr" class="border rounded p-1 text-sm bg-white"><option value="BRL">R$</option><option value="USD">$</option><option value="EUR">€</option><option value="GBP">£</option></select>
+                        <input type="number" step="0.01" id="newCostVal" placeholder="0.00" class="w-24 border rounded p-1 text-sm">
+                        <button type="button" onclick="window.addTempCost()" class="btn btn-secondary py-1 px-3">+</button>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-4 border-t">
+                    <button type="button" onclick="document.getElementById('attractionModal').classList.add('hidden')" class="btn btn-ghost">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let appData = { trips: [] };
+        let appState = { currentPage: 'home', currentTripId: null, currentDayId: null, tripSubView: null, history: [] };
+        let tempFixedCosts = [], tempAttractionCosts = [], currentEditingId = null;
+
+        const currencies = [ { code: 'BRL', symbol: 'R$' }, { code: 'USD', symbol: '$' }, { code: 'EUR', symbol: '€' }, { code: 'GBP', symbol: '£' } ];
+        const getSym = (c) => currencies.find(x => x.code === c)?.symbol || c;
+        const uuid = () => Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+        const fmtDate = (d) => { if(!d) return ''; const p = d.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; };
+
+        window.saveData = function() { localStorage.setItem('tripPlannerV4_1', JSON.stringify(appData)); };
+        window.loadData = function() {
+            try {
+                let json = localStorage.getItem('tripPlannerV4_1') || localStorage.getItem('tripPlannerV4_Final') || localStorage.getItem('tripPlannerV3_7');
+                if (json) {
+                    appData = JSON.parse(json);
+                    appData.trips.forEach(t => {
+                        if(!t.fixedCosts) t.fixedCosts = [];
+                        t.days.forEach(d => {
+                            if(!d.attractions) d.attractions = [];
+                            if(!d.dailyExpenses) d.dailyExpenses = [];
+                            if(d.lat === undefined) d.lat = null;
+                            if(d.lng === undefined) d.lng = null;
+                            if(d.city === undefined) d.city = '';
+                            d.attractions.forEach(a => { if(!a.costs) a.costs = a.price ? [{id:uuid(), name:'Entrada', value:a.price, currency:a.currency||'BRL'}] : []; });
+                        });
+                        // Garante ordenação ao carregar
+                        t.days.sort((a, b) => a.date.localeCompare(b.date));
+                    });
+                }
+            } catch (e) { console.error(e); }
+        };
+
+        window.searchCity = async function(dayId) {
+            const btn = document.getElementById(`btn-search-${dayId}`);
+            const input = document.getElementById(`input-city-${dayId}`);
+            if(!input.value) return;
+            btn.innerHTML = '...';
+            try {
+                const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(input.value)}&count=1&language=pt&format=json`);
+                const data = await res.json();
+                if (data.results && data.results.length > 0) {
+                    const loc = data.results[0];
+                    const d = getDayById(dayId);
+                    d.lat = loc.latitude; d.lng = loc.longitude;
+                    d.city = loc.name + (loc.admin1 ? `, ${loc.admin1}` : '') + `, ${loc.country_code}`;
+                    saveData(); window.renderDayDetail(document.getElementById('app'));
+                } else { alert('Não encontrado.'); btn.innerHTML = ICONS.search; }
+            } catch (e) { alert('Erro.'); btn.innerHTML = ICONS.search; }
+        };
+
+        window.navigate = function(page, tripId = null, dayId = null, subView = null) {
+            appState.history.push({ ...appState });
+            if (appState.history.length > 10) appState.history.shift();
+            appState.currentPage = page; appState.currentTripId = tripId; appState.currentDayId = dayId; appState.tripSubView = (page === 'tripDetail') ? subView : null;
+            window.renderApp();
+        };
+
+        window.goBack = function() {
+            if (appState.history.length === 0) return window.navigate('home', null, null, null);
+            const prev = appState.history.pop();
+            Object.assign(appState, prev);
+            window.renderApp();
+        };
+
+        window.renderApp = function() {
+            const app = document.getElementById('app');
+            app.innerHTML = '';
+            const p = appState.currentPage;
+            if (p === 'home') renderHome(app);
+            else if (p === 'addEditTrip') renderAddEditTrip(app);
+            else if (p === 'tripDetail') renderTripDetail(app);
+            else if (p === 'dayDetail') renderDayDetail(app);
+            else renderHome(app);
+        };
+
+        function renderHeader(title) {
+            return `<div class="flex justify-between items-center mb-6 sticky top-0 bg-[#f3f4f6]/95 backdrop-blur z-40 py-3 border-b border-gray-200 no-print">
+                <div class="flex items-center gap-3"><button onclick="${appState.history.length ? 'goBack()' : "navigate('home')"}" class="p-2 rounded-full bg-white hover:bg-gray-100 shadow text-gray-600">${ICONS.back}</button>${title ? `<h1 class="text-lg font-bold text-gray-800 truncate">${title}</h1>` : ''}</div>
+                <div class="flex gap-2 text-sm"><button onclick="navigate('home')" class="p-2 bg-white rounded-full shadow hover:text-primary" title="Home">${ICONS.home}</button><button onclick="exportJson()" class="p-2 bg-white rounded-full shadow hover:text-primary" title="Backup">${ICONS.save}</button></div>
+            </div>`;
+        }
+
+        function renderHome(c) {
+            const trips = appData.trips;
+            const nextTrip = trips.filter(t => new Date(t.startDate) >= new Date()).sort((a,b) => new Date(a.startDate) - new Date(b.startDate))[0];
+            let html = `<div class="animate-fade-in"><div class="flex justify-between items-center mb-6 no-print"><h1 class="text-2xl font-bold text-gray-800">Meus Roteiros ✈️</h1><label class="text-xs text-blue-600 cursor-pointer hover:underline">Restaurar<input type="file" onchange="importJson(event)" class="hidden"></label></div>`;
+            if (nextTrip) {
+                const daysLeft = Math.ceil((new Date(nextTrip.startDate) - new Date()) / (1000 * 60 * 60 * 24));
+                html += `<div onclick="navigate('tripDetail', '${nextTrip.id}')" class="bg-gradient-to-r from-primary to-indigo-600 rounded-xl p-6 text-white shadow-lg mb-8 cursor-pointer transform hover:scale-[1.01] transition no-print"><p class="text-indigo-200 text-xs font-bold uppercase tracking-wider mb-1">Próxima Viagem</p><h2 class="text-3xl font-bold mb-2">${nextTrip.destination}</h2><p class="text-lg opacity-90">Faltam <b>${daysLeft}</b> dias</p></div>`;
+            }
+            html += `<div class="flex justify-between items-center mb-4 no-print"><h3 class="font-bold text-gray-700">Todas as Viagens</h3><button onclick="navigate('addEditTrip')" class="btn btn-primary text-sm">${ICONS.plus} Criar Viagem</button></div><div class="grid md:grid-cols-2 gap-4">`;
+            trips.forEach(t => { html += `<div onclick="navigate('tripDetail', '${t.id}')" class="card p-5 cursor-pointer hover:shadow-lg transition border-l-4 border-secondary relative group"><div class="flex justify-between items-start"><div><h3 class="font-bold text-lg text-gray-800">${t.name}</h3><p class="text-sm text-gray-500">${t.destination}</p></div><span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded font-mono">${fmtDate(t.startDate)}</span></div><button onclick="event.stopPropagation(); deleteTrip('${t.id}')" class="absolute bottom-4 right-4 text-gray-300 hover:text-red-500 transition px-2 no-print">${ICONS.trash}</button></div>`; });
+            c.innerHTML = html + `</div></div>`;
+        }
+
+        function renderAddEditTrip(c) {
+            const tid = appState.currentTripId;
+            const t = tid ? appData.trips.find(x => x.id === tid) : { fixedCosts: [] };
+            tempFixedCosts = [...(t.fixedCosts || [])];
+            c.innerHTML = `${renderHeader(tid ? 'Editar' : 'Nova')}<div class="card p-6 animate-fade-in"><form onsubmit="window.submitTripForm(event)" data-id="${tid || ''}" class="space-y-4"><div class="grid md:grid-cols-2 gap-4"><div><label class="block text-xs font-bold text-gray-500 uppercase">Nome</label><input type="text" name="name" value="${t.name||''}" required class="w-full border rounded p-2"></div><div><label class="block text-xs font-bold text-gray-500 uppercase">Destino Geral</label><input type="text" name="destination" value="${t.destination||''}" required class="w-full border rounded p-2"></div><div><label class="block text-xs font-bold text-gray-500 uppercase">Início</label><input type="date" name="startDate" value="${t.startDate||''}" required class="w-full border rounded p-2"></div><div><label class="block text-xs font-bold text-gray-500 uppercase">Fim</label><input type="date" name="endDate" value="${t.endDate||''}" required class="w-full border rounded p-2"></div></div><div class="border-t pt-4"><h3 class="font-bold mb-3 text-gray-700">Financeiro</h3><div class="grid md:grid-cols-3 gap-3 mb-4"><div><label class="block text-xs font-bold text-gray-500 uppercase">Moeda</label><select name="mainCurrency" class="w-full border rounded p-2">${currencies.map(c=>`<option value="${c.code}" ${(t.mainCurrency||'BRL')===c.code?'selected':''}>${c.code}</option>`).join('')}</select></div><div><label class="block text-xs font-bold text-gray-500 uppercase">Orçamento Extra</label><input type="number" step="0.01" name="expectedBudget" value="${t.expectedBudget||0}" class="w-full border rounded p-2"></div><div><label class="block text-xs font-bold text-gray-500 uppercase">Gasto Extra</label><input type="number" step="0.01" name="spentBudget" value="${t.spentBudget||0}" class="w-full border rounded p-2"></div></div><div class="bg-gray-50 p-3 rounded border"><label class="block text-xs font-bold text-gray-500 uppercase mb-2">Custos Fixos</label><div id="fixedCostsContainer" class="space-y-2 mb-2"></div><div class="flex gap-2"><input id="fcDesc" placeholder="Descrição" class="w-full border rounded p-1 text-sm"><select id="fcCurr" class="border rounded p-1 text-sm w-20">${currencies.map(c=>`<option value="${c.code}">${c.code}</option>`).join('')}</select><input id="fcAmt" type="number" step="0.01" placeholder="0.00" class="w-24 border rounded p-1 text-sm"><button type="button" onclick="window.addFixedCost()" class="btn btn-secondary px-3 font-bold">${ICONS.plus}</button></div></div></div><button type="submit" class="btn btn-primary w-full py-3 mt-4 justify-center">Salvar</button></form></div>`;
+            window.renderFixedCosts();
+        }
+
+        function renderTripDetail(c) {
+            const tid = appState.currentTripId;
+            const t = appData.trips.find(x => x.id === tid);
+            if (!t) return window.navigate('home');
+            
+            if (appState.tripSubView === 'budget') {
+                let totalEst = t.expectedBudget || 0, totalReal = t.spentBudget || 0;
+                let listFixed = [], listAtt = [], listDaily = [];
+                t.fixedCosts.forEach(fc => { totalEst += fc.amount; totalReal += fc.amount; listFixed.push(fc); });
+                t.days.forEach(d => { 
+                    d.attractions.forEach(a => a.costs.forEach(ac => { totalEst += ac.value; if(a.visited) totalReal += ac.value; listAtt.push({name: a.name, val: ac.value, cur: ac.currency}); })); 
+                    (d.dailyExpenses||[]).forEach(e => { totalReal += e.amount; listDaily.push(e); }); 
+                });
+                c.innerHTML = `
+                ${renderHeader(t.name)}
+                <div class="card p-6 animate-fade-in">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">${ICONS.money} Relatório Financeiro</h2>
+                    <div class="grid grid-cols-2 gap-4 mb-8"><div class="bg-indigo-50 p-4 rounded border border-indigo-100"><p class="text-xs font-bold text-gray-500 uppercase">Estimado (Mix)</p><p class="text-3xl font-bold text-primary">${totalEst.toFixed(2)}</p></div><div class="bg-green-50 p-4 rounded border border-green-100"><p class="text-xs font-bold text-gray-500 uppercase">Gasto Real (Mix)</p><p class="text-3xl font-bold text-secondary">${totalReal.toFixed(2)}</p></div></div>
+                    <div class="space-y-6">
+                        <div><h3 class="font-bold text-gray-700 border-b pb-1 mb-2">Custos Fixos</h3>${listFixed.length ? `<div class="bg-gray-50 rounded p-3 text-sm space-y-1">${listFixed.map(x=>`<div class="flex justify-between"><span>${x.description}</span><span class="font-bold">${x.currency} ${x.amount}</span></div>`).join('')}</div>` : '<p class="text-gray-400 italic text-sm">Nenhum custo fixo.</p>'}</div>
+                        <div><h3 class="font-bold text-gray-700 border-b pb-1 mb-2">Atrações</h3>${listAtt.length ? `<div class="bg-gray-50 rounded p-3 text-sm space-y-1">${listAtt.map(x=>`<div class="flex justify-between"><span>${x.name}</span><span class="font-bold">${x.cur} ${x.val}</span></div>`).join('')}</div>` : '<p class="text-gray-400 italic text-sm">Sem custos de atração.</p>'}</div>
+                        <div><h3 class="font-bold text-gray-700 border-b pb-1 mb-2">Gastos Diários</h3>${listDaily.length ? `<div class="bg-gray-50 rounded p-3 text-sm space-y-1">${listDaily.map(x=>`<div class="flex justify-between"><span>${x.description}</span><span class="font-bold">${x.currency} ${x.amount}</span></div>`).join('')}</div>` : '<p class="text-gray-400 italic text-sm">Nenhum gasto avulso.</p>'}</div>
+                    </div>
+                </div>`;
+                return;
+            }
+            let html = `${renderHeader(t.name)}<div class="mb-6 flex justify-between items-end"><div><h2 class="text-3xl font-bold text-gray-800">${t.destination}</h2><p class="text-gray-500">${fmtDate(t.startDate)} a ${fmtDate(t.endDate)}</p></div><div class="flex gap-2 no-print"><button onclick="navigate('tripDetail','${tid}',null,'budget')" class="btn btn-ghost">💰 Finanças</button><button onclick="navigate('addEditTrip','${tid}')" class="btn btn-ghost">⚙ Editar</button><button onclick="window.print()" class="btn btn-primary">🖨 Imprimir PDF</button></div></div><div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">`;
+            
+            // SORT DAYS (Importante se data mudou)
+            t.days.sort((a,b) => a.date.localeCompare(b.date));
+
+            t.days.forEach((d, i) => {
+                html += `
+                <div onclick="navigate('dayDetail', '${tid}', '${d.id}')" class="card p-4 cursor-pointer hover:shadow-md border border-transparent hover:border-primary transition relative">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-lg leading-none">Dia ${i+1}</h4>
+                            <p class="text-sm text-gray-500 font-medium mt-1 leading-tight line-clamp-2">${d.dateText}</p>
+                        </div>
+                        <div id="weather-icon-${d.id}" class="text-lg"></div>
+                    </div>
+                    <p class="text-xs text-gray-400 mb-2 border-t pt-1 mt-2">${d.city ? '📍 '+d.city.split(',')[0] : fmtDate(d.date)}</p>
+                    <div class="space-y-1">${d.attractions.slice(0,3).map(a => `<div class="text-sm text-gray-600 truncate flex items-center gap-1"><span class="w-2 h-2 rounded-full ${a.visited?'bg-green-500':'bg-gray-300'}"></span> ${a.name}</div>`).join('')}</div>
+                </div>`;
+                if(d.lat && d.lng) setTimeout(() => window.loadWeather(d.lat, d.lng, d.date, `weather-icon-${d.id}`), 50);
+            });
+            c.innerHTML = html + `</div>`;
+        }
+
+        function renderDayDetail(c) {
+            const tid = appState.currentTripId, did = appState.currentDayId;
+            const t = appData.trips.find(x => x.id === tid), d = t.days.find(x => x.id === did);
+            if(!d.dailyExpenses) d.dailyExpenses = [];
+            
+            c.innerHTML = `
+            ${renderHeader()}
+            <div class="card p-6 animate-fade-in max-w-4xl mx-auto mb-20">
+                <div class="flex justify-between items-start border-b pb-4 mb-6">
+                    <div class="w-full">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-3xl font-bold text-gray-800">${d.dateText}</h2>
+                            <button onclick="window.editDayTitle('${d.id}')" class="text-gray-400 hover:text-primary no-print">${ICONS.edit}</button>
+                            <button onclick="window.duplicateDay('${d.id}')" class="text-gray-400 hover:text-primary no-print" title="Duplicar Dia">${ICONS.copy}</button>
+                        </div>
+                        
+                        <div class="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                            <span>Data:</span>
+                            <input type="date" value="${d.date}" onchange="window.changeDayDate('${d.id}', this.value)" class="bg-transparent border-b border-gray-300 focus:border-primary outline-none font-medium">
+                        </div>
+
+                    </div>
+                    <div id="weather-detail-${d.id}" class="text-right"></div>
+                </div>
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6"><h3 class="font-bold text-blue-800 flex items-center gap-2 mb-2">📍 Localização & Clima</h3><div class="flex gap-2 mb-2"><input type="text" id="input-city-${d.id}" value="${d.city || ''}" placeholder="Digite a cidade deste dia (Ex: Roma)" class="w-full border rounded p-2 text-sm"><button id="btn-search-${d.id}" onclick="window.searchCity('${d.id}')" class="btn btn-primary px-3 no-print">${ICONS.search}</button></div>${d.lat ? `<p class="text-xs text-green-700 font-bold">✓ Coordenadas definidas: ${d.lat.toFixed(2)}, ${d.lng.toFixed(2)}</p>` : `<p class="text-xs text-gray-500 italic">Defina a cidade para ver a previsão.</p>`}</div>
+                <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-6"><div class="flex justify-between items-center mb-3"><h3 class="font-bold text-indigo-800">🚄 Trem / Deslocamento</h3><div class="flex bg-white rounded shadow-sm overflow-hidden text-xs no-print"><button onclick="toggleTrain(false)" class="px-3 py-1 font-bold ${!d.trainTrip?.enabled?'bg-gray-500 text-white':'text-gray-600'}">Não</button><button onclick="toggleTrain(true)" class="px-3 py-1 font-bold ${d.trainTrip?.enabled?'bg-primary text-white':'text-gray-600'}">Sim</button></div></div>${d.trainTrip?.enabled ? `<div class="space-y-4">${renderTrainSection(d, 'outbound', 'Ida')}<div class="border-t border-indigo-200 pt-2">${renderTrainSection(d, 'inbound', 'Volta')}</div></div>` : ''}</div>
+                
+                <div class="bg-red-50 border border-red-100 rounded-xl p-4 mb-6">
+                    <h3 class="font-bold text-red-800 mb-3">💸 Gastos do Dia</h3>
+                    <ul class="space-y-2 mb-3">
+                        ${d.dailyExpenses.map((e,i) => `<li class="flex justify-between bg-white p-2 rounded border border-red-100 text-sm"><span>${e.description}</span><div class="flex gap-2 font-bold text-red-600"><span>${e.currency} ${e.amount}</span><button onclick="window.removeDailyExpense(${i})" class="text-red-400 hover:text-red-800 no-print">×</button></div></li>`).join('')}
+                    </ul>
+                    <form onsubmit="window.addDailyExpense(event)" class="flex gap-2 no-print">
+                        <input id="deDesc" placeholder="Desc (Ex: Almoço)" required class="w-full border rounded p-2 text-sm">
+                        <select id="deCurr" class="border rounded p-2 text-sm bg-white">${currencies.map(c=>`<option value="${c.code}">${c.code}</option>`).join('')}</select>
+                        <input id="deAmt" type="number" step="0.01" placeholder="0.00" required class="w-24 border rounded p-2 text-sm">
+                        <button type="submit" class="btn btn-secondary px-3">+</button>
+                    </form>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4 mb-8"><div class="bg-gray-50 p-4 rounded-xl border border-gray-200"><h3 class="font-bold text-xs text-gray-800 uppercase mb-2">Hospedagem</h3><label class="block text-sm mb-1">Checkout: <select onchange="updateDayField('checkOutHotelId', this.value)" class="bg-white border rounded p-1 w-full text-sm">${renderHotelOptions(t, d.checkOutHotelId)}</select></label><label class="block text-sm">Checkin: <select onchange="updateDayField('checkInHotelId', this.value)" class="bg-white border rounded p-1 w-full text-sm">${renderHotelOptions(t, d.checkInHotelId)}</select></label><button onclick="document.getElementById('hotelModal').classList.remove('hidden')" class="text-xs text-blue-600 font-bold mt-2 hover:underline no-print">+ Gerenciar Hoteis</button></div><div class="bg-gray-50 p-4 rounded-xl border border-gray-200"><div class="flex justify-between items-center mb-2"><h3 class="font-bold text-xs text-gray-800 uppercase">Mapa</h3>${d.kmlUrl ? '<span class="text-[10px] bg-green-200 px-2 rounded-full text-green-800 font-bold">KML Ativo</span>' : ''}</div><div class="flex gap-2 text-xs no-print"><button onclick="document.getElementById('kmlModal').classList.remove('hidden')" class="bg-white border px-3 py-1 rounded font-bold shadow-sm">Configurar KML</button><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(d.city || t.destination)}" target="_blank" class="bg-white border px-3 py-1 rounded font-bold shadow-sm text-blue-600">Abrir Google Maps</a></div></div></div>
+                <div class="mb-8"><div class="flex justify-between items-center mb-4"><h3 class="font-bold text-xl text-gray-800">Roteiro</h3><button onclick="openAttractionModal()" class="btn btn-secondary text-sm shadow no-print">${ICONS.plus} Nova Atração</button></div><div id="attractionList" class="space-y-3 pb-4 min-h-[50px]">${d.attractions.map(a => { const total = a.costs.reduce((sum,c)=>sum+c.value,0); return `<div data-id="${a.id}" class="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md flex gap-4 group relative items-start"><div class="drag-handle cursor-move text-gray-300 pt-1 hover:text-gray-500 no-print">☰</div><div class="flex-grow"><div class="flex justify-between items-start"><h4 class="font-bold text-lg text-gray-800 ${a.visited?'line-through text-gray-400':''}">${a.name}</h4>${total>0 ? `<span class="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded-full">${getSym(a.costs[0]?.currency)} ${total.toFixed(2)}</span>` : ''}</div>${a.hours ? `<p class="text-xs text-gray-500 font-bold mb-1">🕒 ${a.hours}</p>` : ''}<p class="text-gray-600 text-sm whitespace-pre-line">${a.description || ''}</p></div><div class="flex flex-col gap-2 absolute right-2 top-2 opacity-0 group-hover:opacity-100 bg-white shadow rounded p-1 border transition-opacity no-print"><button onclick="toggleVisited('${a.id}')" class="p-1 hover:bg-green-100 text-green-600 rounded" title="Check">✔</button><button onclick="openAttractionModal('${a.id}')" class="p-1 hover:bg-blue-100 text-blue-600 rounded" title="Editar">${ICONS.edit}</button><button onclick="deleteAttraction('${a.id}')" class="p-1 hover:bg-red-100 text-red-500 rounded" title="Excluir">${ICONS.trash}</button></div></div>`; }).join('')}</div></div>
+                <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 relative"><span class="absolute -top-3 left-4 bg-yellow-200 text-yellow-800 px-2 py-0.5 text-xs font-bold rounded shadow-sm uppercase">Diário / Notas</span><textarea class="w-full bg-transparent border-none focus:ring-0 text-gray-700 min-h-[100px]" onblur="updateDayField('notes', this.value)">${d.notes||''}</textarea></div>
+            </div>`;
+            
+            if(d.lat && d.lng) setTimeout(() => window.loadWeather(d.lat, d.lng, d.date, `weather-detail-${d.id}`), 50);
+            const el = document.getElementById('attractionList');
+            if(el) Sortable.create(el, { handle: '.drag-handle', animation: 150, onEnd: function(evt) { const ids = Array.from(el.children).map(child => child.dataset.id); d.attractions = ids.map(id => d.attractions.find(a => a.id === id)).filter(a=>a); saveData(); }});
+            if(d.kmlUrl && window.google) new google.maps.KmlLayer({ url: d.kmlUrl, map: new google.maps.Map(document.getElementById('map-container'), {zoom:12, center:{lat:0,lng:0}}) });
+        }
+
+        // --- HELPERS ---
+        function renderTrainSection(day, type, label) { const list = day.trainTrip[type] || []; return `<div><div class="flex justify-between items-end mb-2"><h4 class="text-xs font-bold text-indigo-400 uppercase">${label}</h4><button onclick="addTrainSegment('${type}')" class="text-[10px] bg-white border px-2 py-1 rounded shadow-sm hover:bg-gray-50 font-bold no-print">+ Trecho</button></div><div class="space-y-2">${list.map((s, idx) => `<div class="flex items-center gap-2 bg-white p-2 rounded border shadow-sm text-sm"><input type="time" value="${s.departureTime}" onchange="updateTrainSeg('${type}', ${idx}, 'departureTime', this.value)" class="w-20 font-bold border-b outline-none"><input type="text" value="${s.station}" placeholder="Estação" onchange="updateTrainSeg('${type}', ${idx}, 'station', this.value)" class="flex-grow border-b outline-none"><button onclick="removeTrainSeg('${type}', ${idx})" class="text-red-400 hover:text-red-600 font-bold px-2 no-print">×</button></div>`).join('')}${list.length === 0 ? '<p class="text-xs text-gray-400 italic">Nenhum trecho.</p>' : ''}</div></div>`; }
+        function renderHotelOptions(trip, selectedId) { return '<option value="">-- Selecione --</option>' + trip.hotels.map(h => `<option value="${h.id}" ${h.id===selectedId?'selected':''}>${h.name}</option>`).join(''); }
+        window.renderFixedCosts = function() { const c = document.getElementById('fixedCostsContainer'); if(!c) return; c.innerHTML = tempFixedCosts.map((fc, i) => `<div class="flex justify-between bg-white p-2 rounded border text-sm items-center"><span>${fc.description}</span><div class="flex gap-2 font-bold text-gray-700"><span>${fc.currency} ${fc.amount}</span><button type="button" onclick="window.removeFixedCost(${i})" class="text-red-500 px-1">${ICONS.trash}</button></div></div>`).join(''); };
+        window.submitTripForm = function(e) { e.preventDefault(); const f = e.target, tid = f.dataset.id; let t; if (tid) t = appData.trips.find(x => x.id === tid); else { t = { id: uuid(), days: [], hotels: [] }; const d1 = new Date(f.startDate.value), d2 = new Date(f.endDate.value), count = (d2-d1)/(1000*60*60*24) + 1; for(let i=0; i<count; i++) { const d = new Date(d1); d.setDate(d1.getDate()+i+1); t.days.push({ id: uuid(), date: d.toISOString().split('T')[0], dateText: `Dia ${i+1}`, attractions: [], dailyExpenses: [], trainTrip: null }); } appData.trips.push(t); } t.name = f.name.value; t.destination = f.destination.value; t.startDate = f.startDate.value; t.endDate = f.endDate.value; t.mainCurrency = f.mainCurrency.value; t.expectedBudget = parseFloat(f.expectedBudget.value); t.spentBudget = parseFloat(f.spentBudget.value); t.fixedCosts = tempFixedCosts; saveData(); navigate(tid ? 'tripDetail' : 'trips', t.id); };
+        window.addFixedCost = function() { const desc = document.getElementById('fcDesc').value, amt = parseFloat(document.getElementById('fcAmt').value), curr = document.getElementById('fcCurr').value; if(desc && amt) { tempFixedCosts.push({ id: uuid(), description: desc, amount: amt, currency: curr }); renderFixedCosts(); document.getElementById('fcDesc').value = ''; document.getElementById('fcAmt').value = ''; } };
+        window.removeFixedCost = function(i) { tempFixedCosts.splice(i, 1); renderFixedCosts(); };
+        window.deleteTrip = function(id) { if(confirm('Excluir?')) { appData.trips = appData.trips.filter(t => t.id !== id); saveData(); renderHome(document.getElementById('app')); } };
+        window.toggleTrain = function(active) { const d = getDay(); if(active) { if(!d.trainTrip) d.trainTrip = { enabled: true, outbound: [], inbound: [] }; else d.trainTrip.enabled = true; } else { if(d.trainTrip) d.trainTrip.enabled = false; } saveData(); refreshDay(); };
+        window.addTrainSegment = function(type) { getDay().trainTrip[type].push({ id: uuid(), departureTime: '', station: '' }); saveData(); refreshDay(); };
+        window.removeTrainSeg = function(type, idx) { getDay().trainTrip[type].splice(idx, 1); saveData(); refreshDay(); };
+        window.updateTrainSeg = function(type, idx, field, val) { getDay().trainTrip[type][idx][field] = val; saveData(); };
+        window.updateDayField = function(field, val) { getDay()[field] = val; saveData(); };
+        window.openAttractionModal = function(aid = null) { currentEditingId = aid; const d = getDay(), att = aid ? d.attractions.find(a => a.id === aid) : { name: '', description: '', hours: '', costs: [] }; document.getElementById('attName').value = att.name; document.getElementById('attDesc').value = att.description; document.getElementById('attHours').value = att.hours || ''; document.getElementById('attModalTitle').textContent = aid ? 'Editar Atração' : 'Nova Atração'; tempAttractionCosts = JSON.parse(JSON.stringify(att.costs || [])); renderTempAttractionCosts(); document.getElementById('attractionModal').classList.remove('hidden'); };
+        window.addTempCost = function() { const n = document.getElementById('newCostName').value, v = parseFloat(document.getElementById('newCostVal').value), c = document.getElementById('newCostCurr').value; if(n && v >= 0) { tempAttractionCosts.push({ id: uuid(), name: n, value: v, currency: c }); renderTempAttractionCosts(); document.getElementById('newCostName').value = ''; document.getElementById('newCostVal').value = ''; } };
+        window.removeTempCost = function(i) { tempAttractionCosts.splice(i, 1); renderTempAttractionCosts(); };
+        window.renderTempAttractionCosts = function() { const ul = document.getElementById('attCostsList'); if(!ul) return; ul.innerHTML = tempAttractionCosts.map((c, i) => `<li class="flex justify-between items-center bg-white border p-1 rounded px-2"><span>${c.name}</span><span class="font-bold text-gray-700 text-xs flex items-center gap-2">${c.currency} ${c.value} <button type="button" onclick="removeTempCost(${i})" class="text-red-500 font-bold">×</button></span></li>`).join(''); };
+        window.saveAttractionForm = function(e) { e.preventDefault(); const d = getDay(); const newAtt = { id: currentEditingId || uuid(), name: document.getElementById('attName').value, description: document.getElementById('attDesc').value, hours: document.getElementById('attHours').value, costs: tempAttractionCosts, visited: currentEditingId ? d.attractions.find(a=>a.id===currentEditingId).visited : false }; if (currentEditingId) Object.assign(d.attractions.find(a => a.id === currentEditingId), newAtt); else d.attractions.push(newAtt); saveData(); document.getElementById('attractionModal').classList.add('hidden'); refreshDay(); };
+        window.deleteAttraction = function(aid) { if(confirm('Excluir?')) { const d = getDay(); d.attractions = d.attractions.filter(a => a.id !== aid); saveData(); refreshDay(); } };
+        window.toggleVisited = function(aid) { const a = getDay().attractions.find(x => x.id === aid); a.visited = !a.visited; saveData(); refreshDay(); };
+        window.saveHotelForm = function(e) { e.preventDefault(); const t = appData.trips.find(x => x.id === appState.currentTripId); t.hotels.push({ id: uuid(), name: document.getElementById('hotelName').value, location: document.getElementById('hotelLocation').value }); saveData(); document.getElementById('hotelModal').classList.add('hidden'); refreshDay(); };
+        window.saveKmlForm = function(e) { e.preventDefault(); getDay().kmlUrl = document.getElementById('kmlUrl').value; saveData(); document.getElementById('kmlModal').classList.add('hidden'); refreshDay(); };
+        window.exportJson = function() { const a = document.createElement('a'); a.href = 'data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(appData,null,2)); a.download = 'backup_viagem.json'; a.click(); };
+        window.importJson = function(e) { if(!e.target.files[0]) return; const r = new FileReader(); r.onload = ev => { try { appData = JSON.parse(ev.target.result); saveData(); location.reload(); } catch(err){alert('Erro');} }; r.readAsText(e.target.files[0]); };
+        window.loadWeather = async function(lat, lng, date, elId) { const el = document.getElementById(elId); if(!lat || !lng || !el) return; const diff = Math.ceil((new Date(date)-new Date())/86400000); if(diff > 14 || diff < -1) { el.innerHTML = '<span class="text-xs text-gray-400">Sem previsão (Data distante)</span>'; return; } try { const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${date}&end_date=${date}`); const data = await res.json(); if(data.daily && data.daily.weathercode) { const c = data.daily.weathercode[0], min = Math.round(data.daily.temperature_2m_min[0]), max = Math.round(data.daily.temperature_2m_max[0]); const icon = c===0?'☀️':(c<3?'⛅':(c<60?'☁️':'🌧️')); el.innerHTML = `<span class="text-2xl">${icon}</span> <span class="text-sm font-bold block text-gray-600">${min}° / ${max}°</span>`; } } catch(e) {} };
+        window.addDailyExpense = function(e) { e.preventDefault(); const d = getDay(); const desc = document.getElementById('deDesc').value, amt = parseFloat(document.getElementById('deAmt').value), cur = document.getElementById('deCurr').value; if(desc && amt) { if(!d.dailyExpenses) d.dailyExpenses=[]; d.dailyExpenses.push({id:uuid(), description:desc, amount:amt, currency:cur}); saveData(); refreshDay(); } };
+        window.removeDailyExpense = function(i) { const d = getDay(); d.dailyExpenses.splice(i,1); saveData(); refreshDay(); };
+        window.editDayTitle = function(did) { const d = getDayById(did); const t = prompt("Novo título:", d.dateText); if(t) { d.dateText = t; saveData(); refreshDay(); } };
+        window.duplicateDay = function(did) { 
+            const trip = appData.trips.find(t => t.id === appState.currentTripId);
+            const sourceDay = trip.days.find(d => d.id === did);
+            const targetDay = trip.days[trip.days.indexOf(sourceDay) + 1];
+            if(targetDay && confirm(`Copiar dados de "${sourceDay.dateText}" para o dia seguinte "${targetDay.dateText}"?`)) {
+                targetDay.attractions = JSON.parse(JSON.stringify(sourceDay.attractions)).map(a => ({...a, id: uuid(), visited: false})); // Novos IDs para atrações
+                targetDay.checkInHotelId = sourceDay.checkInHotelId;
+                targetDay.checkOutHotelId = sourceDay.checkOutHotelId;
+                targetDay.lat = sourceDay.lat;
+                targetDay.lng = sourceDay.lng;
+                targetDay.city = sourceDay.city;
+                saveData(); alert("Dia copiado com sucesso!");
+            } else { alert("Não é possível copiar para o último dia ou usuário cancelou."); }
+        };
+        
+        // NOVA FUNÇÃO PARA ALTERAR DATA E REORDENAR
+        window.changeDayDate = function(dayId, newDate) {
+            if(!newDate) return;
+            const d = getDayById(dayId);
+            const trip = appData.trips.find(t => t.id === appState.currentTripId);
+            
+            d.date = newDate;
+            // Ordenar dias cronologicamente
+            trip.days.sort((a,b) => a.date.localeCompare(b.date));
+            
+            saveData();
+            // Volta para a lista de dias para mostrar a nova ordem
+            navigate('tripDetail', trip.id);
+            alert("Dias reordenados com sucesso!");
+        };
+        
+        function getDay() { return appData.trips.find(t => t.id === appState.currentTripId).days.find(d => d.id === appState.currentDayId); }
+        function getDayById(did) { return appData.trips.find(t => t.id === appState.currentTripId).days.find(d => d.id === did); }
+        function refreshDay() { renderDayDetail(document.getElementById('app')); }
+        window.onload = () => { loadData(); renderApp(); };
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAtp5jarrnwyy3_JWVfoWGbKlfEd4NjSKk"></script>
+</body>
+</html>
