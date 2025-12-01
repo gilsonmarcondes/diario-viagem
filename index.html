@@ -3,837 +3,498 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diário de Viagem Mágico ✨</title>
-    
+    <title>Diário Mágico - Com Aeroporto</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Lato:wght@300;400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { 
-                        sans: ['Lato', 'sans-serif'],
-                        magic: ['Cinzel', 'serif'],
-                        hand: ['Dancing Script', 'cursive']
-                    },
-                    colors: { 
-                        'parchment': '#fdf6e3',
-                        'parchment-dark': '#eee8d5',
-                        'wizard-gold': '#d4af37',
-                        'magic-blue': '#1e3a8a',
-                        'spell-red': '#991b1b',
-                        'potion-green': '#065f46',
-                    },
-                    boxShadow: {
-                        'magical': '0 10px 15px -3px rgba(212, 175, 55, 0.3), 0 4px 6px -2px rgba(212, 175, 55, 0.1)',
-                    }
-                }
-            }
-        }
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Lato:wght@400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    
     <style>
-        body { 
-            font-family: 'Lato', sans-serif; 
-            background-color: #fdf6e3; 
-            color: #2c3e50;
-            background-image: radial-gradient(#d4af37 0.5px, transparent 0.5px), radial-gradient(#d4af37 0.5px, #fdf6e3 0.5px);
-            background-size: 20px 20px;
-            background-position: 0 0, 10px 10px;
-            background-attachment: fixed;
-        }
-
-        h1, h2, h3, .font-magic { font-family: 'Cinzel', serif; letter-spacing: 0.5px; }
+        body { font-family: 'Lato', sans-serif; background-color: #fdf6e3; color: #1e3a8a; }
+        .font-magic { font-family: 'Cinzel', serif; }
         .font-hand { font-family: 'Dancing Script', cursive; }
-
-        .card { 
-            background: #fffef0; 
-            border: 1px solid #e2d1c3;
-            border-radius: 1rem; 
-            box-shadow: 2px 4px 12px rgba(0,0,0,0.08);
-            position: relative;
-        }
-        .card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-            background: linear-gradient(90deg, #d4af37, #fdf6e3, #d4af37);
-            border-radius: 1rem 1rem 0 0;
-            opacity: 0.7;
-        }
-
-        .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 9999px; font-weight: 700; transition: all 0.3s; font-size: 0.85rem; cursor: pointer; text-transform: uppercase; font-family: 'Cinzel', serif; }
-        .btn-primary { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; border: 1px solid #1e3a8a; box-shadow: 0 4px 6px rgba(30, 58, 138, 0.2); }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
-        .btn-secondary { background: linear-gradient(135deg, #065f46 0%, #10b981 100%); color: white; }
-        .btn-ghost { background: transparent; color: #574c43; border: 1px solid #d6c0b3; }
-        .btn-ghost:hover { background: #f3e6d8; color: #2c3e50; }
-
-        input, select, textarea { background-color: #fff; border: 1px solid #d4c5b5 !important; border-radius: 0.5rem !important; font-family: 'Lato', sans-serif; }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: #d4af37 !important; box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2) !important; }
-
-        .modal { position: fixed; inset: 0; background: rgba(26, 22, 37, 0.8); display: flex; align-items: center; justify-content: center; z-index: 50; backdrop-filter: blur(4px); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-        .modal.active { opacity: 1; pointer-events: auto; }
-        .modal-content { transform: scale(0.9); transition: transform 0.3s; border: 2px solid #d4af37; box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); background: #fffef0; }
-        .modal.active .modal-content { transform: scale(1); }
-
-        .passport-stamp { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); border: 3px double #d4af37; border-radius: 50%; padding: 10px; color: #d4af37; font-family: 'Cinzel', serif; font-weight: 900; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0; pointer-events: none; transition: all 0.5s ease; z-index: 10; background: rgba(255, 254, 240, 0.9); box-shadow: 0 0 10px rgba(212, 175, 55, 0.5); }
-        .visited-active .passport-stamp { opacity: 1; transform: translate(-50%, -50%) rotate(-15deg) scale(1); }
-
-        /* Timeline Styles */
-        .timeline-container { position: relative; padding-left: 1.5rem; border-left: 2px dashed #cbd5e1; margin-left: 0.5rem; }
-        .timeline-item { position: relative; margin-bottom: 1rem; }
-        .timeline-dot { position: absolute; left: -1.9rem; top: 0.25rem; width: 0.8rem; height: 0.8rem; background: #fff; border: 2px solid #1e3a8a; border-radius: 50%; z-index: 2; }
-        .timeline-dot.end { background: #1e3a8a; }
-
-        .icon { width: 1.25rem; height: 1.25rem; }
-        .fade-in { animation: fadeIn 0.5s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .sortable-ghost { opacity: 0.4; background: #d4af37; border: 2px dashed #1e3a8a; }
-        .drag-handle { cursor: grab; user-select: none; }
-
-        @media print {
-            body { background: white; background-image: none; }
-            .no-print, .btn, .modal { display: none !important; }
-            .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; margin-bottom: 20px; }
-        }
+        .btn { padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-primary { background: #1e3a8a; color: white; }
+        .btn-success { background: #059669; color: white; }
+        .btn-warning { background: #d97706; color: white; }
+        .btn-ghost { background: transparent; border: 1px solid #ccc; color: #555; }
+        .btn-gold { background: #d4af37; color: white; }
+        .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); position: relative; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 50; backdrop-filter: blur(2px); }
+        .modal.active { display: flex; }
+        .hidden-input { display: none; }
+        .timeline-item { position: relative; padding-left: 20px; border-left: 2px dashed #cbd5e1; margin-left: 5px; padding-bottom: 10px; }
+        .timeline-dot { position: absolute; left: -6px; top: 0; width: 10px; height: 10px; background: #1e3a8a; border-radius: 50%; }
+        .cost-item { display: flex; justify-content: space-between; padding: 6px; background: #f3f4f6; border-radius: 4px; margin-bottom: 4px; font-size: 0.85rem; align-items: center; }
+        .tab-btn { padding: 10px; cursor: pointer; border-bottom: 2px solid transparent; width: 50%; text-align: center; }
+        .tab-btn.active { border-bottom: 3px solid #1e3a8a; font-weight: bold; color: #1e3a8a; background: rgba(30, 58, 138, 0.05); }
+        .attraction-img { height: 120px; min-width: 160px; object-fit: cover; border-radius: 8px; border: 1px solid #eee; flex-shrink: 0; }
+        .gallery-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 8px; scroll-behavior: smooth; }
+        .gallery-container::-webkit-scrollbar { height: 6px; }
+        .gallery-container::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 3px; }
+        .journal-box { background: #fffef0; border: 1px solid #e2d1c3; font-family: 'Dancing Script', cursive; font-size: 1.2rem; line-height: 1.5; color: #4a4a4a; padding: 15px; border-radius: 8px; width: 100%; min-height: 150px; background-image: radial-gradient(#d4af37 0.5px, transparent 0.5px); background-size: 20px 20px; }
     </style>
 </head>
-<body class="pb-20">
+<body class="p-4 pb-20">
 
-    <div id="app" class="max-w-5xl mx-auto p-4 md:p-6">
-        <div class="text-center mt-20">
-            <h1 class="text-2xl font-magic text-magic-blue">Carregando Magia...</h1>
-        </div>
-    </div>
-    
-    <div class="fixed bottom-2 right-2 no-print opacity-50 hover:opacity-100">
-        <button onclick="hardReset()" class="text-[10px] text-gray-400 hover:text-red-500">Reset de Emergência</button>
-    </div>
+    <div id="app" class="max-w-6xl mx-auto"></div>
 
-    <div id="confirmModal" class="modal">
-        <div class="card w-96 p-6 modal-content text-center">
-            <h3 class="text-xl font-bold text-spell-red mb-2" id="confirmTitle">Tem certeza?</h3>
-            <p class="text-gray-600 mb-6" id="confirmMsg">Essa ação é irreversível.</p>
-            <div class="flex justify-center gap-3">
-                <button id="btnConfirmCancel" class="btn btn-ghost">Cancelar</button>
-                <button id="btnConfirmOk" class="btn btn-danger">Confirmar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="packingModal" class="modal">
-        <div class="card w-full max-w-md p-6 modal-content max-h-[85vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4 border-b border-wizard-gold pb-2">
-                <h3 class="text-xl font-magic text-magic-blue">Lista de Bagagem 🧳</h3>
-                <button onclick="closeModal('packingModal')" class="text-2xl">×</button>
-            </div>
-            <form onsubmit="window.addPackingItem(event)" class="flex gap-2 mb-4">
-                <input type="text" id="packItemInput" placeholder="Ex: Capa da Invisibilidade" class="w-full border rounded p-2" required>
-                <button type="submit" class="btn btn-primary">+</button>
-            </form>
-            <ul id="packingListContainer" class="space-y-2"></ul>
-        </div>
-    </div>
-
-    <div id="transportModal" class="modal">
-        <div class="card w-full max-w-2xl p-6 modal-content m-4 max-h-[90vh] overflow-y-auto">
+    <div id="cityModal" class="modal">
+        <div class="bg-white p-6 rounded-lg w-full max-w-md m-4">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-magic text-magic-blue">Expresso de Hogwarts 🚂</h3>
-                <button onclick="closeModal('transportModal')" class="text-2xl">×</button>
+                <h3 class="font-bold text-lg">Selecionar Cidade 🌍</h3>
+                <button onclick="closeModals()" class="text-red-500 font-bold text-xl">×</button>
             </div>
-            <div class="flex gap-4 mb-6 border-b border-wizard-gold/20 pb-4">
-                <label class="flex items-center gap-2 cursor-pointer font-bold text-magic-blue"><input type="radio" name="tripType" value="one-way" checked onchange="toggleReturnSection()" class="accent-wizard-gold"> Só Ida</label>
-                <label class="flex items-center gap-2 cursor-pointer font-bold text-magic-blue"><input type="radio" name="tripType" value="round-trip" onchange="toggleReturnSection()" class="accent-wizard-gold"> Ida e Volta 🔁</label>
+            <div class="flex gap-2 mb-4">
+                <input id="citySearchInput" placeholder="Digite a cidade..." class="w-full p-2 border rounded">
+                <button onclick="searchCity()" class="btn btn-primary">🔍</button>
             </div>
-            <form onsubmit="window.saveTransportForm(event)" class="space-y-6">
-                <div>
-                    <h4 class="font-magic text-sm uppercase tracking-widest text-wizard-gold mb-2">Trajeto de Ida</h4>
-                    <div id="outboundSegments" class="space-y-3"></div>
-                    <button type="button" onclick="addSegment('outboundSegments')" class="mt-2 text-xs text-blue-600 hover:underline">+ Adicionar Conexão/Baldeação</button>
-                </div>
-                <div id="returnSection" class="hidden border-t border-dashed border-gray-300 pt-4">
-                    <h4 class="font-magic text-sm uppercase tracking-widest text-wizard-gold mb-2">Trajeto de Volta</h4>
-                    <div id="inboundSegments" class="space-y-3"></div>
-                    <button type="button" onclick="addSegment('inboundSegments')" class="mt-2 text-xs text-blue-600 hover:underline">+ Adicionar Conexão/Baldeação</button>
-                </div>
-                <div class="bg-parchment p-4 rounded border border-wizard-gold/30 mt-4">
-                    <label class="text-xs font-bold text-wizard-gold uppercase block mb-2">Custo Total</label>
-                    <div class="flex gap-2 items-center">
-                        <select id="transCostCurr" class="border rounded p-2 text-sm"><option value="BRL">R$</option><option value="USD">$</option><option value="EUR">€</option><option value="GBP">£</option></select>
-                        <input type="number" step="0.01" id="transCostVal" placeholder="0.00" class="w-32 border rounded p-2 text-sm">
-                    </div>
-                </div>
-                <div class="flex justify-end gap-2 pt-4">
-                    <button type="button" onclick="closeModal('transportModal')" class="btn btn-ghost">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Bilhete</button>
-                </div>
-            </form>
+            <div id="cityList" class="space-y-2 max-h-60 overflow-y-auto"></div>
+            <button onclick="closeModals()" class="w-full mt-4 p-2 bg-gray-200 rounded">Cancelar</button>
         </div>
     </div>
 
     <div id="attractionModal" class="modal">
-        <div class="card w-full max-w-lg p-6 modal-content m-4 max-h-[90vh] overflow-y-auto">
-            <h3 class="text-xl font-magic mb-4 text-magic-blue">Nova Atração ✨</h3>
-            <form onsubmit="window.saveAttractionForm(event)" class="space-y-4">
-                <input type="text" id="attName" placeholder="Nome do Local" required class="w-full border rounded p-2 font-bold">
-                <div class="grid grid-cols-2 gap-4">
-                    <input type="text" id="attHours" placeholder="Horário (ex: 14:00)" class="w-full border rounded p-2">
-                    <input type="text" id="attAddress" placeholder="Endereço" class="w-full border rounded p-2">
-                </div>
-                <textarea id="attDesc" rows="3" placeholder="Descrição Mágica..." class="w-full border rounded p-2"></textarea>
-                <div class="bg-parchment p-4 rounded border border-wizard-gold/30">
-                    <label class="text-xs font-bold text-wizard-gold uppercase block mb-2">Custos</label>
-                    <ul id="attCostsList" class="space-y-2 mb-3 text-sm"></ul>
-                    <div class="flex gap-2 items-end">
-                        <input type="text" id="newCostName" placeholder="Item" class="w-full border rounded p-1 text-sm">
-                        <select id="newCostCurr" class="border rounded p-1 text-sm"><option value="BRL">R$</option><option value="USD">$</option><option value="EUR">€</option><option value="GBP">£</option></select>
-                        <input type="number" step="0.01" id="newCostVal" placeholder="0.00" class="w-24 border rounded p-1 text-sm">
-                        <button type="button" onclick="window.addTempCost()" class="btn btn-secondary py-1 px-3">+</button>
+        <div class="bg-white p-6 rounded-lg w-full max-w-lg m-4 max-h-[90vh] overflow-y-auto">
+            <h3 id="attModalTitle" class="font-bold text-lg mb-4 text-magic-blue">Nova Atração ✨</h3>
+            <div class="space-y-3">
+                <div class="flex gap-2">
+                    <div class="w-2/3">
+                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Nome</label>
+                        <input id="attName" placeholder="Ex: Torre Eiffel" class="w-full p-2 border rounded font-bold">
+                    </div>
+                    <div class="w-1/3">
+                        <label class="text-xs font-bold text-gray-500 uppercase ml-1">Categoria</label>
+                        <select id="attType" class="w-full p-2 border rounded bg-gray-50">
+                            <option value="sight">🏰 Passeio</option>
+                            <option value="food">🍔 Comida</option>
+                            <option value="shop">🛍️ Compras</option>
+                            <option value="hotel">🏨 Hotel</option>
+                            <option value="transport">🚌 Transp.</option>
+                            <option value="airport">✈️ Aeroporto</option>
+                            <option value="other">✨ Outros</option>
+                        </select>
                     </div>
                 </div>
-                <div class="flex justify-end gap-2 pt-4">
-                    <button type="button" onclick="closeModal('attractionModal')" class="btn btn-ghost">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar</button>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <input id="attHours" placeholder="Horário (Ex: 14:00)" class="w-full p-2 border rounded">
+                    <input id="attAddress" placeholder="Endereço / Localização" class="w-full p-2 border rounded">
                 </div>
+                
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase ml-1">Fotos (Links)</label>
+                    <textarea id="attPhotos" rows="2" placeholder="Cole links das imagens (um por linha)..." class="w-full p-2 border rounded text-xs bg-gray-50 font-mono"></textarea>
+                </div>
+                <textarea id="attDesc" rows="3" placeholder="Descrição, notas importantes..." class="w-full p-2 border rounded"></textarea>
+                
+                <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Custos (Ingressos)</label>
+                    <ul id="attCostsList" class="mb-3"></ul>
+                    <div class="flex gap-2 items-center">
+                        <input id="newCostName" placeholder="Item" class="w-full p-1 text-sm border rounded">
+                        <select id="newCostCurr" class="p-1 text-sm border rounded"><option value="BRL">R$</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select>
+                        <input id="newCostVal" type="number" step="0.01" placeholder="0.00" class="w-24 p-1 text-sm border rounded">
+                        <button type="button" onclick="addTempCost()" class="btn btn-success text-xs px-3">+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-6 border-t pt-4">
+                <button onclick="closeModals()" class="btn bg-gray-200 text-gray-800">Cancelar</button>
+                <button onclick="saveAttraction()" class="btn btn-primary">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="transportModal" class="modal">
+        <div class="bg-white p-6 rounded-lg w-full max-w-2xl m-4 max-h-[90vh] overflow-y-auto">
+            <h3 class="font-bold text-lg text-magic-blue mb-4">Expresso de Hogwarts 🚂</h3>
+            <div class="flex gap-4 mb-4 border-b pb-4">
+                <label class="flex items-center gap-2 font-bold cursor-pointer"><input type="radio" name="tripType" value="one-way" checked onchange="toggleReturnSection()"> Só Ida</label>
+                <label class="flex items-center gap-2 font-bold cursor-pointer"><input type="radio" name="tripType" value="round-trip" onchange="toggleReturnSection()"> Ida e Volta</label>
+            </div>
+            <h4 class="font-bold text-sm text-gray-500 uppercase mb-2">Ida</h4>
+            <div id="outboundSegments" class="space-y-2"></div>
+            <button onclick="addSegment('outboundSegments')" class="text-xs text-blue-600 hover:underline mb-4">+ Conexão</button>
+            <div id="returnSection" class="hidden border-t pt-4">
+                <h4 class="font-bold text-sm text-gray-500 uppercase mb-2">Volta</h4>
+                <div id="inboundSegments" class="space-y-2"></div>
+                <button onclick="addSegment('inboundSegments')" class="text-xs text-blue-600 hover:underline mb-4">+ Conexão</button>
+            </div>
+            <div class="mt-4 border-t pt-4 flex justify-between items-center">
+                <div class="flex gap-2">
+                    <select id="transCurr" class="p-2 border rounded text-sm"><option value="BRL">R$</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select>
+                    <input type="number" id="transCost" placeholder="Custo" class="border p-2 rounded w-32 text-sm">
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="closeModals()" class="btn btn-ghost">Cancelar</button>
+                    <button onclick="saveTransport()" class="btn btn-primary">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="financeModal" class="modal">
+        <div class="bg-white p-0 rounded-lg w-full max-w-4xl m-4 h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+                <h3 class="font-bold text-xl text-green-800">Cofre do Tesouro 💰</h3>
+                <button onclick="closeModals()" class="text-2xl text-gray-500 hover:text-red-500">×</button>
+            </div>
+            <div class="flex border-b bg-white sticky top-0 z-10">
+                <div class="tab-btn active" onclick="switchFinanceTab('report')">📊 Relatório & Câmbio</div>
+                <div class="tab-btn" onclick="switchFinanceTab('costs')">💸 Custos Prévios</div>
+            </div>
+            <div id="tab-report" class="p-6 overflow-y-auto flex-1 bg-gray-50">
+                <div class="bg-white p-4 rounded border mb-6 shadow-sm">
+                    <h4 class="font-bold text-sm text-gray-600 uppercase mb-2">Taxas de Conversão (Para R$)</h4>
+                    <div class="flex gap-4 flex-wrap items-end">
+                        <div><label class="text-xs block">USD</label><input type="number" id="rateUSD" class="border p-1 rounded w-20" placeholder="5.00" onchange="saveRates()"></div>
+                        <div><label class="text-xs block">EUR</label><input type="number" id="rateEUR" class="border p-1 rounded w-20" placeholder="6.00" onchange="saveRates()"></div>
+                        <div><label class="text-xs block">GBP</label><input type="number" id="rateGBP" class="border p-1 rounded w-20" placeholder="7.00" onchange="saveRates()"></div>
+                    </div>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-6">
+                    <h4 class="font-bold text-blue-900 text-sm uppercase tracking-wider mb-2">Custos Fixos / Já Pagos</h4>
+                    <div id="reportSunkCosts" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <h4 class="font-bold text-lg mb-4 text-center text-magic-blue border-b pb-2">Orçamento da Viagem (Dia a Dia)</h4>
+                    <div id="reportTable" class="overflow-x-auto"></div>
+                    <div id="reportGrandTotal" class="mt-4 p-4 bg-green-100 border border-green-300 rounded text-center font-bold text-green-900 text-lg"></div>
+                </div>
+            </div>
+            <div id="tab-costs" class="p-6 overflow-y-auto flex-1 hidden">
+                <h4 class="font-bold mb-4">Lançar Custos Anteriores</h4>
+                <div class="flex flex-wrap gap-2 mb-4 bg-green-50 p-4 rounded border">
+                    <select id="initType" class="p-2 border rounded w-full md:w-auto">
+                        <option value="Avião">✈️ Avião</option>
+                        <option value="Trem">🚂 Trem</option>
+                        <option value="Cruzeiro">🚢 Cruzeiro</option>
+                        <option value="Hospedagem">🏨 Hospedagem</option>
+                        <option value="Outros">📦 Outros</option>
+                    </select>
+                    <input id="initDesc" placeholder="Descrição..." class="flex-1 p-2 border rounded min-w-[200px]">
+                    <select id="initCurr" class="p-2 border rounded w-24"><option value="BRL">R$</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select>
+                    <input id="initVal" type="number" step="0.01" placeholder="Valor" class="w-28 p-2 border rounded">
+                    <button onclick="addInitialCost()" class="btn btn-success">Adicionar</button>
+                </div>
+                <h4 class="font-bold mb-2">Lista de Registros</h4>
+                <ul id="initialCostsList" class="space-y-2"></ul>
+            </div>
+        </div>
+    </div>
+
+    <div id="dayExtraModal" class="modal">
+        <div class="bg-white p-6 rounded-lg w-full max-w-sm m-4">
+            <h3 class="font-bold text-lg mb-4 text-green-700">Gasto Extra do Dia 💸</h3>
+            <input id="extraDesc" placeholder="O que? Onde? (Ex: Almoço)" class="w-full p-2 border rounded mb-2">
+            <div class="flex gap-2 mb-4">
+                <select id="extraCurr" class="p-2 border rounded"><option value="BRL">R$</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select>
+                <input id="extraVal" type="number" step="0.01" placeholder="Valor" class="w-full p-2 border rounded">
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModals()" class="btn bg-gray-200 text-gray-800">Cancelar</button>
+                <button onclick="saveDayExtra()" class="btn btn-success">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="checklistModal" class="modal">
+        <div class="bg-white p-6 rounded-lg w-full max-w-md m-4 max-h-[80vh] overflow-y-auto">
+            <h3 class="font-bold text-lg mb-4">Checklist Pré-Viagem ✅</h3>
+            <form onsubmit="addCheckItem(event)" class="flex gap-2 mb-4">
+                <input id="checkInput" placeholder="Ex: Comprar Seguro Viagem" class="w-full p-2 border rounded" required>
+                <button class="btn btn-primary">+</button>
             </form>
+            <ul id="checklistContainer" class="space-y-2"></ul>
+            <div class="mt-4 text-center"><button onclick="closeModals()" class="btn btn-ghost text-xs">Fechar</button></div>
         </div>
     </div>
 
     <script>
-        // --- CONFIG & UTILS ---
-        const ICONS = {
-            home: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
-            save: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>`,
-            back: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>`,
-            edit: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`,
-            trash: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>`,
-            plus: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>`,
-            money: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
-            bag: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>`,
-            train: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 19H5V8h14m-3-5v2a2 2 0 002 2h2v10h-2a2 2 0 00-2 2v2H8v-2a2 2 0 00-2-2H4V7h2a2 2 0 002-2V3h8zM8 12h8m-8 4h8"/></svg>`,
-            map: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>`,
-            search: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>`,
-            scroll: `<svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`
-        };
-
-        const escapeHTML = (str) => String(str || '').replace(/[&<>'"]/g, t => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[t]));
-        const showToast = (msg, type = 'success') => Toastify({ text: msg, duration: 3000, gravity: "top", position: "center", backgroundColor: type === 'error' ? "#991b1b" : "#d4af37", stopOnFocus: true }).showToast();
-        const uuid = () => Math.random().toString(36).substr(2, 9);
-        const fmtDate = (d) => { if(!d) return ''; const p = d.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; };
-        
-        let confirmCallback = null;
-        window.askConfirm = (title, msg, callback) => {
-            document.getElementById('confirmTitle').textContent = title;
-            document.getElementById('confirmMsg').textContent = msg;
-            confirmCallback = callback;
-            document.getElementById('confirmModal').classList.add('active');
-        };
-        document.getElementById('btnConfirmOk').onclick = () => { if(confirmCallback) confirmCallback(); document.getElementById('confirmModal').classList.remove('active'); };
-        document.getElementById('btnConfirmCancel').onclick = () => document.getElementById('confirmModal').classList.remove('active');
-        window.openModal = (id) => document.getElementById(id).classList.add('active');
-        window.closeModal = (id) => document.getElementById(id).classList.remove('active');
-        
-        // Reset de Emergência para casos de erro
-        window.hardReset = () => { 
-            if(confirm("Isso apagará todos os dados e resetará o app. Continuar?")) { 
-                localStorage.clear(); 
-                location.reload(); 
-            } 
-        };
-
-        // --- STATE ---
+        // --- DADOS E ESTADO ---
         let appData = { trips: [] };
-        let appState = { currentPage: 'home', currentTripId: null, currentDayId: null, tripSubView: null, history: [] };
-        let tempAttractionCosts = [], currentEditingId = null;
-        const currencies = [ { code: 'BRL', symbol: 'R$' }, { code: 'USD', symbol: '$' }, { code: 'EUR', symbol: '€' }, { code: 'GBP', symbol: '£' } ];
+        let currentState = { page: 'home', tripId: null, dayId: null };
+        let currentEditingId = null;
+        let tempAttractionCosts = [];
 
-        window.saveData = () => localStorage.setItem('tripPlannerMagic', JSON.stringify(appData));
-        window.loadData = () => {
+        // CONFIGURAÇÃO DE CATEGORIAS
+        const categories = {
+            sight: { icon: '🏰', color: 'bg-blue-100 text-blue-800 border-blue-200' },
+            food: { icon: '🍔', color: 'bg-rose-100 text-rose-800 border-rose-200' },
+            shop: { icon: '🛍️', color: 'bg-amber-100 text-amber-800 border-amber-200' },
+            hotel: { icon: '🏨', color: 'bg-purple-100 text-purple-800 border-purple-200' },
+            transport: { icon: '🚌', color: 'bg-gray-100 text-gray-800 border-gray-200' },
+            airport: { icon: '✈️', color: 'bg-sky-100 text-sky-800 border-sky-200' },
+            other: { icon: '✨', color: 'bg-slate-100 text-slate-800 border-slate-200' }
+        };
+
+        // --- INICIALIZAÇÃO ---
+        function init() {
             try {
-                let json = localStorage.getItem('tripPlannerMagic') || localStorage.getItem('tripPlannerV5');
-                if (json) {
-                    appData = JSON.parse(json);
-                    appData.trips.forEach(t => {
-                        if (!t.packingList) t.packingList = [];
-                        t.days.forEach(d => { if (!d.transport) d.transport = []; });
+                const json = localStorage.getItem('magic_planner_v4') || localStorage.getItem('magic_planner_v3');
+                if (json) appData = JSON.parse(json);
+                if(!appData.trips) appData.trips = [];
+                appData.trips.forEach(t => {
+                    if(!t.initialCosts) t.initialCosts = [];
+                    if(!t.checklist) t.checklist = [];
+                    if(!t.rates) t.rates = { USD: 0, EUR: 0, GBP: 0 };
+                    if(!t.days) t.days = [];
+                    t.days.forEach(d => {
+                        if(!d.locations) d.locations = [];
+                        if(!d.attractions) d.attractions = [];
+                        if(!d.transport) d.transport = [];
+                        if(!d.extraCosts) d.extraCosts = [];
+                        if(typeof d.journal !== 'string') d.journal = '';
+                        d.attractions.forEach(a => { 
+                            if(!a.costs) a.costs = []; 
+                            if(!a.photos) a.photos = a.photo ? [a.photo] : [];
+                            if(!a.type) a.type = 'other';
+                        });
                     });
-                }
-            } catch (e) { console.error(e); }
-        };
-
-        window.navigate = (page, tripId = null, dayId = null, subView = null) => {
-            appState.history.push({ ...appState });
-            if (appState.history.length > 10) appState.history.shift();
-            appState.currentPage = page; appState.currentTripId = tripId; appState.currentDayId = dayId; appState.tripSubView = (page === 'tripDetail') ? subView : null;
-            window.renderApp();
-        };
-
-        window.goBack = () => {
-            if (appState.history.length === 0) return window.navigate('home');
-            const prev = appState.history.pop();
-            Object.assign(appState, prev);
-            window.renderApp();
-        };
-
-        // --- RENDER ---
-        window.renderApp = () => {
-            try {
-                const app = document.getElementById('app');
-                app.innerHTML = '';
-                if (appState.currentPage === 'home') renderHome(app);
-                else if (appState.currentPage === 'addEditTrip') renderAddEditTrip(app);
-                else if (appState.currentPage === 'tripDetail') renderTripDetail(app);
-                else if (appState.currentPage === 'dayDetail') renderDayDetail(app);
-            } catch (err) {
-                console.error("Erro ao renderizar:", err);
-                document.getElementById('app').innerHTML = `<div class="text-center p-10 text-red-600"><h2 class="text-2xl font-bold">Erro Mágico</h2><p>${err.message}</p><button onclick="hardReset()" class="btn btn-danger mt-4">Resetar Dados</button></div>`;
-            }
-        };
-
-        function renderHeader(title) {
-            return `<div class="flex justify-between items-center mb-6 sticky top-0 bg-[#fdf6e3]/95 backdrop-blur z-40 py-3 border-b border-wizard-gold/30 no-print">
-                <div class="flex items-center gap-3"><button onclick="${appState.history.length ? 'goBack()' : "navigate('home')"}" class="p-2 rounded-full hover:bg-parchment-dark text-magic-blue transition">${ICONS.back}</button>${title ? `<h1 class="text-lg font-magic text-magic-blue truncate max-w-[200px] md:max-w-md">${escapeHTML(title)}</h1>` : ''}</div>
-                <div class="flex gap-2 text-sm"><button onclick="navigate('home')" class="p-2 hover:text-magic-blue transition" title="Home">${ICONS.home}</button><button onclick="exportJson()" class="p-2 hover:text-magic-blue transition" title="Backup">${ICONS.save}</button></div>
-            </div>`;
-        }
-
-        function renderHome(c) {
-            const trips = appData.trips || [];
-            const nextTrip = trips.filter(t => new Date(t.startDate) >= new Date()).sort((a,b) => new Date(a.startDate) - new Date(b.startDate))[0];
-            
-            let html = `<div class="animate-fade-in"><div class="flex justify-between items-center mb-8 no-print"><h1 class="text-3xl font-magic text-magic-blue">Meus Mapas Mágicos 🗺️</h1><label class="text-xs text-wizard-gold cursor-pointer hover:underline uppercase tracking-widest font-bold">Importar Pergaminho<input type="file" onchange="importJson(event)" class="hidden"></label></div>`;
-            
-            if (nextTrip) {
-                const daysLeft = Math.ceil((new Date(nextTrip.startDate) - new Date()) / (1000 * 60 * 60 * 24));
-                const bgStyle = nextTrip.coverUrl ? `background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('${nextTrip.coverUrl}'); background-size: cover; background-position: center;` : `background: linear-gradient(135deg, #1e3a8a, #4338ca);`;
-                html += `<div onclick="navigate('tripDetail', '${nextTrip.id}')" style="${bgStyle}" class="rounded-xl p-8 text-white shadow-magical mb-10 cursor-pointer transform hover:scale-[1.01] transition no-print border border-wizard-gold relative overflow-hidden group">
-                    <div class="relative z-10 text-center"><p class="text-wizard-gold text-sm font-bold uppercase tracking-[0.3em] mb-2 font-magic">Próxima Aventura</p><h2 class="text-4xl font-magic font-bold mb-2 text-white drop-shadow-lg">${escapeHTML(nextTrip.destination)}</h2><p class="text-xl font-hand opacity-90 text-yellow-100">A magia começa em ${daysLeft} dias</p></div>
-                </div>`;
-            }
-            
-            html += `<div class="flex justify-between items-center mb-4 no-print border-b border-wizard-gold/30 pb-2"><h3 class="font-magic text-xl text-gray-700">Todos os Destinos</h3><button onclick="navigate('addEditTrip')" class="btn btn-primary text-sm">${ICONS.plus} Criar Roteiro</button></div><div class="grid md:grid-cols-2 gap-6">`;
-            
-            if(trips.length === 0) html += `<p class="col-span-2 text-center text-gray-400 italic py-10">Nenhum pergaminho encontrado. Crie sua primeira aventura!</p>`;
-
-            trips.forEach(t => { 
-                const cover = t.coverUrl ? `<div class="h-32 w-full bg-cover bg-center rounded-t-lg" style="background-image: url('${t.coverUrl}')"></div>` : '';
-                html += `<div onclick="navigate('tripDetail', '${t.id}')" class="card cursor-pointer hover:shadow-magical transition group">${cover}<div class="p-5"><div class="flex justify-between items-start"><div><h3 class="font-magic font-bold text-xl text-magic-blue group-hover:text-wizard-gold transition">${escapeHTML(t.name)}</h3><p class="text-sm text-gray-600">${escapeHTML(t.destination)}</p></div><span class="text-xs bg-parchment-dark text-gray-600 px-2 py-1 rounded font-mono border border-gray-300">${fmtDate(t.startDate)}</span></div><button onclick="event.stopPropagation(); deleteTrip('${t.id}')" class="absolute bottom-4 right-4 text-gray-400 hover:text-spell-red transition no-print">${ICONS.trash}</button></div></div>`; 
-            });
-            c.innerHTML = html + `</div></div>`;
-        }
-
-        function renderAddEditTrip(c) {
-            const tid = appState.currentTripId;
-            const t = tid ? appData.trips.find(x => x.id === tid) : { fixedCosts: [], exchangeRates: {} };
-            c.innerHTML = `${renderHeader(tid ? 'Editar Pergaminho' : 'Novo Roteiro')}
-            <div class="card p-6 animate-fade-in max-w-2xl mx-auto"><form onsubmit="window.submitTripForm(event)" data-id="${tid || ''}" class="space-y-4"><div class="grid md:grid-cols-2 gap-4"><div><label class="block text-xs font-bold text-gray-500 uppercase">Nome da Aventura</label><input type="text" name="name" value="${escapeHTML(t.name||'')}" required class="w-full border p-2"></div><div><label class="block text-xs font-bold text-gray-500 uppercase">Reino / Destino</label><input type="text" name="destination" value="${escapeHTML(t.destination||'')}" required class="w-full border p-2"></div><div><label class="block text-xs font-bold text-gray-500 uppercase">Data de Partida</label><input type="date" name="startDate" value="${t.startDate||''}" required class="w-full border p-2"></div><div><label class="block text-xs font-bold text-gray-500 uppercase">Data de Retorno</label><input type="date" name="endDate" value="${t.endDate||''}" required class="w-full border p-2"></div><div class="md:col-span-2"><label class="block text-xs font-bold text-gray-500 uppercase">URL da Capa (Imagem)</label><input type="url" name="coverUrl" placeholder="https://..." value="${escapeHTML(t.coverUrl||'')}" class="w-full border p-2"></div></div><div class="border-t border-wizard-gold/30 pt-4 mt-6"><h3 class="font-magic mb-3 text-magic-blue">Cofre de Gringotts (Finanças)</h3><div class="grid md:grid-cols-2 gap-4 mb-4"><div><label class="block text-xs font-bold text-gray-500 uppercase">Moeda Principal</label><select name="mainCurrency" id="mainCurrencySelect" class="w-full border p-2">${currencies.map(curr=>`<option value="${curr.code}" ${(t.mainCurrency||'BRL')===curr.code?'selected':''}>${curr.code} (${curr.symbol})</option>`).join('')}</select></div><div><label class="block text-xs font-bold text-gray-500 uppercase">Orçamento Total</label><input type="number" step="0.01" name="expectedBudget" value="${t.expectedBudget||0}" class="w-full border p-2"></div></div></div><button type="submit" class="btn btn-primary w-full py-3 mt-4 justify-center">Salvar Magia ✨</button></form></div>`;
-        }
-
-        function renderTripDetail(c) {
-            const tid = appState.currentTripId;
-            const t = appData.trips.find(x => x.id === tid);
-            if (!t) return window.navigate('home');
-            
-            if (appState.tripSubView === 'budget') {
-                c.innerHTML = `${renderHeader(t.name)}<div class="card p-6 animate-fade-in max-w-4xl mx-auto"><h2 class="text-2xl font-magic mb-6 text-magic-blue flex items-center gap-2">${ICONS.money} Relatório do Tesouro</h2><div class="grid md:grid-cols-2 gap-8 items-center"><div class="h-64 relative"><canvas id="budgetChart"></canvas></div><div id="budgetStats" class="space-y-4"></div></div></div>`;
-                setTimeout(() => renderBudgetChart(t), 100);
-                return;
-            }
-
-            let html = `${renderHeader(t.name)}
-            <div class="mb-8 flex flex-col md:flex-row justify-between items-end gap-4 border-b border-wizard-gold/30 pb-4">
-                <div><h2 class="text-4xl font-magic font-bold text-magic-blue">${escapeHTML(t.destination)}</h2><p class="text-gray-500 font-hand text-xl mt-1">${fmtDate(t.startDate)} a ${fmtDate(t.endDate)}</p></div>
-                <div class="flex gap-2 no-print flex-wrap"><button onclick="window.openPackingModal()" class="btn btn-ghost hover:bg-yellow-50 text-wizard-gold border-wizard-gold">${ICONS.bag} Malas</button><button onclick="navigate('tripDetail','${tid}',null,'budget')" class="btn btn-ghost">💰 Finanças</button><button onclick="navigate('addEditTrip','${tid}')" class="btn btn-ghost">⚙ Editar</button></div>
-            </div>
-            <p class="text-xs text-center text-gray-400 mb-2 uppercase tracking-widest no-print">Arraste os cartões usando o ícone <span class="text-xl leading-none">⋮⋮</span> para reordenar</p>
-            <div id="daysListContainer" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">`;
-            
-            t.days.forEach((d, i) => {
-                const allVisited = d.attractions.length > 0 && d.attractions.every(a => a.visited);
-                html += `<div data-id="${d.id}" class="card p-5 hover:bg-[#fffef8] transition duration-300 group border-l-4 ${allVisited ? 'border-l-potion-green' : 'border-l-wizard-gold'} relative">
-                    <div class="drag-handle absolute top-2 right-2 text-wizard-gold/50 hover:text-wizard-gold p-2 cursor-grab text-2xl leading-none" title="Arrastar para reordenar">⋮⋮</div>
-                    <div onclick="navigate('dayDetail', '${tid}', '${d.id}')" class="cursor-pointer pr-8">
-                        <div class="flex justify-between items-center mb-2"><h4 class="font-magic font-bold text-gray-800 text-lg">Dia ${i+1}</h4><span class="text-sm font-hand text-gray-500">${d.dateText}</span></div>
-                        <div class="space-y-1 mb-2">${d.attractions.slice(0,3).map(a => `<div class="text-sm text-gray-600 truncate flex items-center gap-2"><span class="text-[10px] ${a.visited?'text-green-600':'text-gray-300'}">✦</span> ${escapeHTML(a.name)}</div>`).join('')}${d.attractions.length > 3 ? `<div class="text-xs text-gray-400 italic">+${d.attractions.length-3} locais</div>` : ''}</div>
-                        <p class="text-xs text-right text-gray-400 mt-2">${fmtDate(d.date)}</p>
-                    </div>
-                </div>`;
-            });
-            c.innerHTML = html + `</div>`;
-            const el = document.getElementById('daysListContainer');
-            if(el) Sortable.create(el, { animation: 200, handle: '.drag-handle', ghostClass: 'sortable-ghost', onEnd: function(evt) { const ids = Array.from(el.children).map(c => c.dataset.id); window.reorderDays(tid, ids); }});
-        }
-
-        function renderDayDetail(c) {
-            const tid = appState.currentTripId, did = appState.currentDayId;
-            const t = appData.trips.find(x => x.id === tid), d = t.days.find(x => x.id === did);
-            const transport = d.transport || [];
-            const kmlUrl = d.kmlUrl || '';
-
-            // Helper Timeline
-            const renderTimeline = (segments, label) => {
-                if(!segments || segments.length === 0) return '';
-                let html = `<div class="mb-4"><h5 class="text-xs font-bold text-wizard-gold uppercase mb-2">${label}</h5><div class="timeline-container">`;
-                segments.forEach((seg, idx) => {
-                    html += `<div class="timeline-item"><div class="timeline-dot"></div><div class="text-sm"><span class="font-bold text-gray-800">${escapeHTML(seg.from)}</span><span class="text-xs bg-gray-100 px-1 rounded mx-1">${escapeHTML(seg.time)}</span><div class="text-xs text-gray-500 italic pl-1 my-1 border-l-2 border-dotted border-gray-300">⬇ ${escapeHTML(seg.duration)} • ${escapeHTML(seg.method||'Transporte')}</div></div></div>`;
-                    if(idx === segments.length-1) html += `<div class="timeline-item"><div class="timeline-dot end"></div><div class="text-sm font-bold text-gray-800">${escapeHTML(seg.to)}</div></div>`;
                 });
-                return html + `</div></div>`;
-            };
+            } catch (e) { console.error("Erro ao carregar:", e); }
+            render();
+        }
 
-            c.innerHTML = `${renderHeader(t.destination)}
-            <div class="max-w-4xl mx-auto mb-20 space-y-6">
-                <div class="card p-6 animate-fade-in">
-                    <div class="flex justify-between items-start border-b border-wizard-gold/20 pb-4 mb-4">
-                        <div><div class="flex items-center gap-3"><h2 class="text-3xl font-magic font-bold text-magic-blue">${escapeHTML(d.dateText)}</h2><button onclick="window.editDayTitle('${d.id}')" class="text-gray-400 hover:text-wizard-gold no-print">${ICONS.edit}</button></div><p class="text-gray-500 font-hand text-xl">${fmtDate(d.date)}</p></div>
-                        <div id="weather-icon-${d.id}" class="text-2xl text-right min-w-[80px]"></div>
-                    </div>
-                    <div class="flex gap-2 items-center bg-parchment p-3 rounded border border-wizard-gold/30">
-                        <div class="flex-grow">${d.city ? `<div class="flex items-center gap-2 text-magic-blue font-bold">📍 ${escapeHTML(d.city)} <button onclick="resetCity('${d.id}')" class="text-xs text-red-400 underline ml-2">(Alterar)</button></div>` : `<div class="flex gap-2"><input type="text" id="cityInput" placeholder="Cidade (ex: Orlando)" class="p-1 text-sm border rounded w-full"><button onclick="searchCity('${d.id}')" class="btn btn-sm btn-secondary text-xs p-1 px-3">${ICONS.search}</button></div>`}</div>
-                        ${d.lat ? `<a href="https://www.google.com/maps/search/?api=1&query=${d.lat},${d.lng}" target="_blank" class="btn btn-sm btn-primary text-xs no-print">${ICONS.map} Mapa</a>` : ''}
+        function saveData() { localStorage.setItem('magic_planner_v4', JSON.stringify(appData)); }
+
+        // --- RENDERIZAÇÃO ---
+        function render() {
+            const app = document.getElementById('app');
+            app.innerHTML = ''; 
+            if (currentState.page === 'home') renderHome(app);
+            else if (currentState.page === 'trip') renderTrip(app);
+            else if (currentState.page === 'day') renderDay(app);
+            else if (currentState.page === 'new') renderNewTrip(app);
+        }
+
+        // --- TELAS ---
+        function renderHome(container) {
+            let html = `
+                <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 border-b border-gray-300 pb-4">
+                    <h1 class="text-3xl font-magic text-magic-blue">Meus Roteiros 📜</h1>
+                    <div class="flex gap-2 flex-wrap justify-center">
+                        <label class="btn btn-success shadow text-sm">📂 Importar <input type="file" onchange="importData(event)" class="hidden-input" accept=".json"></label>
+                        <button onclick="exportData()" class="btn btn-warning shadow text-sm">💾 Backup</button>
+                        <button onclick="goTo('new')" class="btn btn-primary shadow text-sm">+ Novo</button>
                     </div>
                 </div>
+                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">`;
+            if(appData.trips.length === 0) html += `<div class="col-span-3 text-center text-gray-400 p-10 border-2 dashed rounded-lg">Nenhum roteiro encontrado.</div>`;
+            appData.trips.forEach(t => {
+                html += `
+                    <div onclick="openTrip('${t.id}')" class="card p-6 cursor-pointer hover:shadow-xl transition transform hover:-translate-y-1 bg-yellow-50 relative group">
+                        <h2 class="text-xl font-bold mb-1 text-magic-blue">${t.destination}</h2>
+                        <p class="text-sm text-gray-600 font-bold mb-2">${t.name || 'Aventura'}</p>
+                        <p class="text-xs text-gray-500">${t.startDate} ➝ ${t.endDate}</p>
+                        <button onclick="event.stopPropagation(); deleteTrip('${t.id}')" class="absolute top-4 right-4 text-red-300 hover:text-red-600 font-bold p-2">🗑</button>
+                    </div>`;
+            });
+            container.innerHTML = html + `</div>`;
+        }
 
-                <div class="card p-4 border border-wizard-gold bg-[#fffef8]">
-                    <details ${kmlUrl ? 'open' : ''}>
-                        <summary class="cursor-pointer font-magic text-wizard-gold font-bold flex items-center gap-2 select-none">${ICONS.scroll} Mapa do Maroto (KML/Embed)</summary>
-                        <div class="mt-4 animate-fade-in">
-                            <div class="flex gap-2 mb-2 no-print">
-                                <input type="text" id="kmlInput" value="${escapeHTML(kmlUrl)}" placeholder="Cole o link do Google My Maps ou KML..." class="w-full text-sm border p-2 rounded">
-                                <button onclick="saveKmlUrl('${d.id}')" class="btn btn-sm btn-secondary text-xs">Carregar</button>
-                            </div>
-                            <div class="text-xs text-gray-500 mb-2 italic px-1">Dica: Se usar Google My Maps, certifique-se que está público ("Qualquer pessoa com link").</div>
-                            <div id="mapContainer-${d.id}" class="w-full h-96 bg-gray-100 rounded border-4 border-wizard-gold overflow-hidden relative">
-                                ${kmlUrl ? renderKmlFrame(kmlUrl) : '<div class="absolute inset-0 flex items-center justify-center text-gray-400 text-sm italic p-4 text-center">Cole o link do mapa para visualizar.</div>'}
-                            </div>
+        function renderNewTrip(container) {
+            container.innerHTML = `
+                <div class="card p-8 max-w-lg mx-auto mt-10">
+                    <h2 class="text-2xl font-magic mb-6 text-center">Nova Aventura</h2>
+                    <input id="newName" class="w-full p-2 border rounded mb-3" placeholder="Nome da Viagem">
+                    <input id="newDest" class="w-full p-2 border rounded mb-3" placeholder="Destino Principal">
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <input id="newStart" type="date" class="w-full p-2 border rounded">
+                        <input id="newEnd" type="date" class="w-full p-2 border rounded">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="createTrip()" class="btn btn-primary w-full justify-center">Criar</button>
+                        <button onclick="goTo('home')" class="btn bg-gray-200 text-gray-800 w-full justify-center">Cancelar</button>
+                    </div>
+                </div>`;
+        }
+
+        function renderTrip(container) {
+            const t = appData.trips.find(x => x.id === currentState.tripId);
+            if(!t) return goTo('home');
+            let html = `
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4 mb-6 sticky top-0 bg-[#fdf6e3] z-10 py-2 border-b">
+                    <div class="flex items-center gap-4">
+                        <button onclick="goTo('home')" class="btn bg-white border shadow-sm">⬅ Voltar</button>
+                        <div><h1 class="text-2xl font-magic font-bold">${t.destination}</h1><p class="text-xs text-gray-500">${t.startDate} - ${t.endDate}</p></div>
+                    </div>
+                    <div class="flex gap-2 flex-wrap">
+                        <button onclick="openChecklist()" class="btn btn-white border shadow text-gray-700 text-xs">✅ Checklist</button>
+                        <button onclick="generateICS()" class="btn btn-white border shadow text-blue-700 text-xs">📅 Agenda</button>
+                        <button onclick="generatePDF()" class="btn btn-white border shadow text-red-700 text-xs">📄 PDF</button>
+                        <button onclick="openFinanceModal()" class="btn btn-gold shadow font-bold text-green-900 border border-yellow-600 text-xs">💰 Finanças</button>
+                    </div>
+                </div>
+                <div id="daysGrid" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 pb-10">`;
+
+            t.days.forEach((d, index) => {
+                const title = d.customTitle || `Dia ${index + 1}`;
+                const locs = d.locations.map(l => l.name.split(',')[0]).join(' & ');
+                html += `
+                    <div data-id="${d.id}" onclick="openDay('${t.id}', '${d.id}')" class="card p-4 cursor-pointer hover:bg-blue-50 transition border-l-4 border-l-blue-800">
+                        <div class="drag-handle absolute top-2 right-2 text-gray-400 hover:text-gray-600 p-1 cursor-move" title="Arrastar">⋮⋮</div>
+                        <div class="flex justify-between items-start pr-6">
+                            <h3 class="font-bold text-lg">${title}</h3>
+                            <span class="text-xs bg-gray-200 px-2 py-1 rounded">${formatDateBr(d.date)}</span>
                         </div>
-                    </details>
-                </div>
-
-                <div class="card p-6 border-l-4 border-l-blue-400">
-                    <div class="flex justify-between items-center mb-4"><h3 class="font-magic text-xl text-blue-900 flex items-center gap-2">${ICONS.train} Expresso de Hogwarts</h3><button onclick="openTransportModal()" class="text-xs btn btn-ghost border-blue-200 text-blue-800 hover:bg-blue-50">+ Bilhete</button></div>
-                    <div id="transportList" class="space-y-4">
-                        ${transport.length === 0 ? '<p class="text-gray-400 text-sm italic">Nenhum deslocamento mágico agendado.</p>' : ''}
-                        ${transport.map(tr => `
-                            <div class="bg-white p-4 rounded border border-blue-100 shadow-sm relative overflow-hidden">
-                                <button onclick="deleteTransport('${tr.id}')" class="absolute top-2 right-2 text-red-300 hover:text-red-500">×</button>
-                                <div class="flex items-center gap-2 mb-3"><span class="text-2xl">🎟️</span><span class="font-bold text-blue-900 text-lg">${tr.type === 'round-trip' ? 'Ida e Volta' : 'Só Ida'}</span>${tr.cost ? `<span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-bold ml-auto mr-6">${tr.cost.currency} ${tr.cost.value}</span>` : ''}</div>
-                                <div class="grid md:grid-cols-2 gap-4">${renderTimeline(tr.outbound, 'IDA ➡️')}${tr.type === 'round-trip' ? renderTimeline(tr.inbound, 'VOLTA ⬅️') : ''}</div>
-                            </div>`).join('')}
-                    </div>
-                </div>
-
-                <div class="card p-6">
-                    <div class="flex justify-between items-center mb-6"><h3 class="font-magic text-xl text-gray-800">Roteiro Mágico</h3><button onclick="openAttractionModal()" class="btn btn-secondary shadow-lg hover:shadow-green-200">${ICONS.plus} Nova Atração</button></div>
-                    <div id="attractionList" class="space-y-4 min-h-[50px]">
-                        ${d.attractions.map(a => `
-                        <div data-id="${a.id}" class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md transition relative group ${a.visited ? 'visited-active' : ''}">
-                            <div class="passport-stamp">VISITADO</div>
-                            <div class="flex justify-between items-start relative z-10">
-                                <div class="w-full"><h4 class="font-bold text-lg text-gray-800 ${a.visited?'opacity-50':''}">${escapeHTML(a.name)}</h4>${a.hours ? `<p class="text-xs text-gray-500 font-bold mb-1">🕒 ${escapeHTML(a.hours)}</p>` : ''}<p class="text-gray-600 text-sm whitespace-pre-line mt-2 italic font-serif">${escapeHTML(a.description || '')}</p></div>
-                                <div class="flex flex-col gap-2 no-print opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onclick="toggleVisited('${a.id}')" class="p-2 ${a.visited?'bg-green-100 text-green-700':'bg-gray-100 text-gray-400'} rounded-full hover:bg-green-200 transition">✔</button>
-                                    <button onclick="openAttractionModal('${a.id}')" class="p-2 bg-blue-50 text-blue-500 rounded-full hover:bg-blue-100 transition">${ICONS.edit}</button>
-                                    <button onclick="deleteAttraction('${a.id}')" class="p-2 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition">${ICONS.trash}</button>
-                                </div>
-                            </div>
-                        </div>`).join('')}
-                    </div>
-                </div>
-
-                <div class="bg-parchment p-4 rounded-lg border border-wizard-gold/40 relative">
-                    <span class="absolute -top-3 left-4 bg-parchment border border-wizard-gold text-wizard-gold px-2 text-xs font-bold uppercase tracking-widest">Diário de Bordo</span>
-                    <textarea class="w-full bg-transparent border-none focus:ring-0 text-gray-700 font-hand text-lg min-h-[100px] outline-none" placeholder="Escreva suas memórias aqui..." onblur="updateDayField('notes', this.value)">${escapeHTML(d.notes||'')}</textarea>
-                </div>
-            </div>`;
-            
-            const el = document.getElementById('attractionList');
-            if(el) Sortable.create(el, { animation: 150, onEnd: function() { const ids = Array.from(el.children).map(c => c.dataset.id); d.attractions = ids.map(id => d.attractions.find(a => a.id === id)); saveData(); }});
-            if(d.lat && d.lng) window.loadWeather(d.lat, d.lng, d.date, `weather-icon-${d.id}`);
+                        <div class="mt-2 text-xs">
+                            <span class="text-blue-600 font-bold">${d.attractions ? d.attractions.length : 0} atrações</span>
+                            ${d.extraCosts && d.extraCosts.length ? `<span class="text-green-600 font-bold ml-2">💸 ${d.extraCosts.length} gastos</span>` : ''}
+                        </div>
+                        ${locs ? `<p class="text-xs text-green-700 mt-1 truncate">📍 ${locs}</p>` : ''}
+                    </div>`;
+            });
+            container.innerHTML = html + `</div>`;
+            setTimeout(() => { const el = document.getElementById('daysGrid'); if(el) new Sortable(el, { animation: 150, handle: '.drag-handle', onEnd: (evt) => { const newOrderIds = Array.from(el.children).map(child => child.getAttribute('data-id')); reorderDays(newOrderIds); }}); }, 100);
         }
 
-        // --- KML & MAP LOGIC (Link Converter) ---
-        window.saveKmlUrl = (dayId) => {
-            const val = document.getElementById('kmlInput').value.trim();
-            const d = appData.trips.find(t=>t.id===appState.currentTripId).days.find(x=>x.id===dayId);
-            d.kmlUrl = val; 
-            saveData(); 
-            window.renderDayDetail(document.getElementById('app'));
-        };
+        function renderDay(container) {
+            const t = appData.trips.find(x => x.id === currentState.tripId);
+            const d = t.days.find(x => x.id === currentState.dayId);
+            if(!d.extraCosts) d.extraCosts = [];
+            const title = d.customTitle || `Dia ${t.days.indexOf(d) + 1}`;
 
-        window.renderKmlFrame = (url) => {
-            let finalUrl = url.trim();
-            // Google Maps
-            if (finalUrl.includes('google.com/maps') && (finalUrl.includes('/edit') || finalUrl.includes('/viewer'))) {
-                finalUrl = finalUrl.replace('/edit', '/embed').replace('/viewer', '/embed');
-                if (!finalUrl.includes('?')) finalUrl += '?';
-                if (!finalUrl.includes('mid=')) { /* tenta manter */ }
-                return `<iframe src="${finalUrl}" width="100%" height="100%" style="border:0"></iframe>`;
-            }
-            // GitHub Raw KML
-            if (finalUrl.includes('github.com') && finalUrl.includes('/blob/')) {
-                finalUrl = finalUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
-            }
-            // Generic KML Embed
-            if (finalUrl.endsWith('.kml')) {
-                const encoded = encodeURIComponent(finalUrl);
-                return `<iframe src="https://maps.google.com/maps?q=${encoded}&t=k&z=13&ie=UTF8&iwloc=&output=embed" width="100%" height="100%" style="border:0"></iframe>`;
-            }
-            // Fallback Iframe (se o usuario ja colou um embed code ou outro link)
-            return `<iframe src="${finalUrl}" width="100%" height="100%" style="border:0"></iframe>`;
-        };
+            let locationsHtml = `<div class="bg-green-50 p-3 rounded border border-green-200 mb-4"><div class="flex justify-between items-center mb-2"><span class="font-bold text-green-900 text-sm uppercase">Destinos / Clima</span><button onclick="openCitySearch()" class="text-xs bg-green-200 text-green-900 px-2 py-1 rounded">+ Cidade</button></div><div class="space-y-2">`;
+            if(d.locations && d.locations.length > 0) {
+                d.locations.forEach((loc, idx) => {
+                    locationsHtml += `<div class="flex justify-between items-center bg-white p-2 rounded border border-green-100"><div><span class="font-bold text-sm">${loc.name}</span><div id="weather-${loc.id}" class="text-xs text-gray-500">⏳ Clima...</div></div><div class="flex gap-2"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.name)}" target="_blank" class="text-blue-500 text-xs font-bold">🗺️</a><button onclick="deleteLocation(${idx})" class="text-red-400 text-xs font-bold">×</button></div></div>`;
+                    setTimeout(() => fetchWeather(loc.lat, loc.lng, d.date, `weather-${loc.id}`), 100);
+                });
+            } else { locationsHtml += `<div class="text-center text-gray-400 text-xs italic">Nenhuma cidade definida.</div>`; }
+            locationsHtml += `</div></div>`;
 
-        // --- TRANSPORT WIZARD ---
-        window.openTransportModal = () => { 
-            document.getElementById('outboundSegments').innerHTML = ''; 
-            document.getElementById('inboundSegments').innerHTML = ''; 
-            addSegment('outboundSegments'); 
-            document.getElementsByName('tripType')[0].checked = true; 
-            toggleReturnSection(); 
-            document.getElementById('transCostVal').value = ''; 
-            openModal('transportModal'); 
-        };
+            const mapHtml = `<div class="card p-4 mb-4 border-l-4 border-l-yellow-400 bg-white"><details ${d.kmlUrl ? 'open' : ''}><summary class="font-bold cursor-pointer text-yellow-700 flex items-center gap-2">🗺️ Mapa do Maroto (Google Maps)</summary><div class="mt-2"><div class="flex gap-2 mb-2"><input id="kmlInput" value="${d.kmlUrl || ''}" placeholder="Cole link do Google Maps My Maps..." class="w-full text-xs p-2 border rounded"><button onclick="saveKml()" class="btn btn-xs bg-yellow-100 text-yellow-800 border">Salvar</button></div><div class="bg-gray-100 h-64 rounded border flex items-center justify-center overflow-hidden">${d.kmlUrl ? renderMapFrame(d.kmlUrl) : '<span class="text-gray-400 text-xs italic">Cole um link para ver o mapa</span>'}</div></div></details></div>`;
 
-        window.toggleReturnSection = () => { 
-            const isRoundTrip = document.querySelector('input[name="tripType"]:checked').value === 'round-trip'; 
-            const sec = document.getElementById('returnSection'); 
-            if(isRoundTrip) { 
-                sec.classList.remove('hidden'); 
-                if(document.getElementById('inboundSegments').children.length === 0) addSegment('inboundSegments'); 
-            } else { 
-                sec.classList.add('hidden'); 
-            } 
-        };
+            let transportHtml = d.transport.map(tr => `<div class="bg-purple-50 p-3 rounded border border-purple-100 mb-2 relative group"><button onclick="deleteTransport('${tr.id}')" class="absolute top-2 right-2 text-red-300 hover:text-red-500 font-bold">×</button><div class="font-bold text-purple-900 text-sm mb-2">🚂 ${tr.type === 'round-trip' ? 'Ida e Volta' : 'Só Ida'} ${tr.cost ? ` - ${tr.currency} ${tr.cost}` : ''}</div><div class="text-xs">${renderTimeline(tr.outbound, 'IDA')}${tr.type === 'round-trip' ? renderTimeline(tr.inbound, 'VOLTA') : ''}</div></div>`).join('');
 
-        window.addSegment = (containerId) => {
-            const container = document.getElementById(containerId); 
-            const div = document.createElement('div');
-            div.className = "grid grid-cols-2 md:grid-cols-4 gap-2 bg-gray-50 p-2 rounded border border-gray-200 relative";
-            div.innerHTML = `
-                <input type="text" placeholder="De (Origem)" class="seg-from w-full border rounded p-1 text-sm">
-                <input type="time" class="seg-time w-full border rounded p-1 text-sm">
-                <input type="text" placeholder="Duração (ex: 2h)" class="seg-dur w-full border rounded p-1 text-sm">
-                <input type="text" placeholder="Para (Destino)" class="seg-to w-full border rounded p-1 text-sm">
-                <input type="text" placeholder="Tipo (Trem/Voo)" class="seg-method col-span-2 md:col-span-4 w-full border rounded p-1 text-xs mt-1">
-                ${container.children.length > 0 ? `<button type="button" onclick="this.parentElement.remove()" class="absolute -top-2 -right-2 bg-red-100 text-red-500 rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-200">×</button>` : ''}
-            `;
-            container.appendChild(div);
-        };
+            let attractionsHtml = d.attractions.map(a => {
+                const totalCost = (a.costs || []).reduce((acc, c) => acc + (parseFloat(c.value) || 0), 0);
+                const costDisplay = totalCost > 0 ? `<span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded ml-2">💰 ${totalCost.toFixed(2)}</span>` : '';
+                let galleryHtml = '';
+                if(a.photos && a.photos.length > 0) galleryHtml = `<div class="gallery-container">` + a.photos.map(p => `<img src="${p}" class="attraction-img" onerror="this.style.display='none'">`).join('') + `</div>`;
+                
+                const cat = categories[a.type || 'other'];
+                const catBadge = `<span class="text-[10px] px-2 py-1 rounded-full border ${cat.color} mr-2">${cat.icon}</span>`;
 
-        window.saveTransportForm = (e) => {
-            e.preventDefault(); 
-            const type = document.querySelector('input[name="tripType"]:checked').value;
-            const extractSegments = (cid) => Array.from(document.getElementById(cid).children).map(div => ({ 
-                from: div.querySelector('.seg-from').value, 
-                time: div.querySelector('.seg-time').value, 
-                duration: div.querySelector('.seg-dur').value, 
-                to: div.querySelector('.seg-to').value, 
-                method: div.querySelector('.seg-method').value 
-            })).filter(s => s.from && s.to);
-            
-            const outbound = extractSegments('outboundSegments'); 
-            const inbound = type === 'round-trip' ? extractSegments('inboundSegments') : [];
-            const costVal = parseFloat(document.getElementById('transCostVal').value); 
-            const costCurr = document.getElementById('transCostCurr').value;
-            
-            const newTransport = { 
-                id: uuid(), 
-                type: type, 
-                outbound: outbound, 
-                inbound: inbound, 
-                cost: costVal ? { value: costVal, currency: costCurr } : null 
-            };
-            
-            const d = appData.trips.find(t=>t.id===appState.currentTripId).days.find(x=>x.id===appState.currentDayId); 
-            if(!d.transport) d.transport = []; 
-            d.transport.push(newTransport);
-            saveData(); 
-            closeModal('transportModal'); 
-            window.renderApp();
-        };
+                return `<div class="flex justify-between items-start p-3 bg-white border border-gray-100 rounded mb-2 shadow-sm"><div class="w-full">${galleryHtml}<div class="font-bold flex items-center ${a.visited ? 'line-through text-gray-400' : 'text-gray-800'}">${catBadge} ${a.name} ${costDisplay}</div>${a.hours ? `<div class="text-xs text-gray-500 font-bold">🕒 ${a.hours}</div>` : ''}${a.description ? `<div class="text-xs text-gray-600 mt-1 italic border-l-2 pl-2">${a.description}</div>` : ''}</div><div class="flex gap-1 ml-2"><button onclick="toggleVisited('${a.id}')" class="text-green-500 hover:bg-green-100 p-2 rounded">✔</button><button onclick="openAttractionModal('${a.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded">✏️</button><button onclick="deleteAttraction('${a.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded">🗑</button></div></div>`;
+            }).join('');
 
-        window.deleteTransport = (tid) => { 
-            window.askConfirm('Rasgar Bilhete?', 'Isso removerá este transporte.', () => { 
-                const d = appData.trips.find(t=>t.id===appState.currentTripId).days.find(x=>x.id===appState.currentDayId); 
-                d.transport = d.transport.filter(t => t.id !== tid); 
-                saveData(); 
-                window.renderApp(); 
-            }); 
-        };
+            let extrasHtml = d.extraCosts.map((ex, i) => `<div class="flex justify-between items-center text-sm p-2 border-b border-dashed"><span>${ex.desc}</span><span class="font-mono font-bold text-green-700">${ex.currency} ${ex.value} <button onclick="deleteExtra(${i})" class="text-red-400 ml-2">×</button></span></div>`).join('');
 
-        // --- CORE LOGIC ---
-        window.searchCity = async (dayId) => { 
-            const input = document.getElementById('cityInput'); 
-            if(!input.value) return; 
-            try { 
-                const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(input.value)}&count=1&language=pt&format=json`); 
-                const data = await res.json(); 
-                if(data.results && data.results.length > 0) { 
-                    const loc = data.results[0]; 
-                    const d = appData.trips.find(t=>t.id===appState.currentTripId).days.find(x=>x.id===dayId); 
-                    d.lat = loc.latitude; 
-                    d.lng = loc.longitude; 
-                    d.city = loc.name + `, ${loc.country_code}`; 
-                    saveData(); 
-                    window.renderDayDetail(document.getElementById('app')); 
-                    showToast('Localização Mágica encontrada!'); 
-                } else { 
-                    showToast('Cidade não encontrada.', 'error'); 
-                } 
-            } catch(e) { 
-                showToast('Erro na esfera de vidro (API).', 'error'); 
-            } 
-        };
-
-        window.resetCity = (dayId) => { 
-            const d = appData.trips.find(t=>t.id===appState.currentTripId).days.find(x=>x.id===dayId); 
-            d.city = null; d.lat = null; d.lng = null; 
-            saveData(); 
-            window.renderDayDetail(document.getElementById('app')); 
-        };
-
-        window.loadWeather = async (lat, lng, date, elId) => { 
-            const el = document.getElementById(elId); 
-            if(!el) return; 
-            try { 
-                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${date}&end_date=${date}`); 
-                const data = await res.json(); 
-                if(data.daily) { 
-                    const c = data.daily.weathercode[0]; 
-                    const icon = c===0?'☀️':(c<3?'⛅':(c<60?'☁️':'🌧️')); 
-                    el.innerHTML = `${icon} <span class="text-sm block">${Math.round(data.daily.temperature_2m_min[0])}°/${Math.round(data.daily.temperature_2m_max[0])}°</span>`; 
-                } 
-            } catch(e){} 
-        };
-
-        window.openAttractionModal = (aid = null) => { 
-            currentEditingId = aid; 
-            const d = appData.trips.find(t=>t.id===appState.currentTripId).days.find(x=>x.id===appState.currentDayId); 
-            let item = { name: '', description: '', hours: '', address: '', costs: [] }; 
-            if(aid) item = d.attractions.find(a => a.id === aid); 
-            document.getElementById('attName').value = item.name; 
-            document.getElementById('attDesc').value = item.description || ''; 
-            document.getElementById('attHours').value = item.hours || ''; 
-            document.getElementById('attAddress').value = item.address || ''; 
-            tempAttractionCosts = JSON.parse(JSON.stringify(item.costs || [])); 
-            renderTempAttractionCosts(); 
-            openModal('attractionModal'); 
-        };
-
-        window.saveAttractionForm = (e) => { 
-            e.preventDefault(); 
-            const d = appData.trips.find(t=>t.id===appState.currentTripId).days.find(x=>x.id===appState.currentDayId); 
-            const newItem = { 
-                id: currentEditingId || uuid(), 
-                name: document.getElementById('attName').value, 
-                description: document.getElementById('attDesc').value, 
-                hours: document.getElementById('attHours').value, 
-                address: document.getElementById('attAddress').value, 
-                costs: tempAttractionCosts, 
-                visited: currentEditingId ? d.attractions.find(a=>a.id===currentEditingId).visited : false 
-            }; 
-            if(currentEditingId) Object.assign(d.attractions.find(a => a.id === currentEditingId), newItem); 
-            else d.attractions.push(newItem); 
-            saveData(); 
-            closeModal('attractionModal'); 
-            window.renderApp(); 
-        };
-
-        window.openPackingModal = () => { 
-            const t = appData.trips.find(x => x.id === appState.currentTripId); 
-            renderPackingList(t); 
-            openModal('packingModal'); 
-        };
-
-        function renderPackingList(t) { 
-            document.getElementById('packingListContainer').innerHTML = (t.packingList || []).map((item, i) => `
-                <li class="flex justify-between items-center bg-white p-2 rounded border border-gray-200">
-                    <label class="flex items-center gap-2 cursor-pointer select-none flex-grow">
-                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="togglePackItem(${i})" class="accent-wizard-gold">
-                        <span class="${item.checked ? 'line-through text-gray-400' : 'text-gray-700'}">${escapeHTML(item.text)}</span>
-                    </label>
-                    <button onclick="deletePackItem(${i})" class="text-red-400 hover:text-red-600 px-2">×</button>
-                </li>
-            `).join(''); 
+            container.innerHTML = `
+                <div class="max-w-2xl mx-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <button onclick="openTrip('${t.id}')" class="btn bg-white border">⬅ Voltar</button>
+                        <div class="text-right">
+                            <h2 onclick="editDayTitle('${d.id}')" class="text-2xl font-magic text-magic-blue cursor-pointer hover:text-yellow-600 transition" title="Clique para editar">${title} ✏️</h2>
+                            <p class="text-gray-500">${formatDateBr(d.date)}</p>
+                        </div>
+                    </div>
+                    ${locationsHtml} ${mapHtml}
+                    <div class="card p-5 mb-4 bg-white border-l-4 border-l-purple-400"><div class="flex justify-between items-center mb-3"><h3 class="font-bold text-purple-900">Expresso de Hogwarts (Transporte)</h3><button onclick="openTransportModal()" class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded hover:bg-purple-200">+ Bilhete</button></div>${transportHtml || '<p class="text-gray-400 text-xs italic">Nenhum trem agendado.</p>'}</div>
+                    <div class="card p-5 min-h-[150px] bg-white mb-4"><div class="flex justify-between items-center mb-4 border-b pb-2"><h3 class="font-bold text-lg text-magic-blue">Roteiro do Dia</h3><div><button onclick="moveUnvisited('${d.id}')" class="btn bg-orange-100 text-orange-800 text-xs mr-2">⏩ Adiar Pendentes</button><button onclick="openAttractionModal()" class="btn btn-primary text-xs">+ Atração</button></div></div>${attractionsHtml || '<p class="text-gray-400 italic text-center py-4">Nada planejado.</p>'}</div>
+                    <div class="card p-5 bg-green-50 border border-green-200 mb-4"><div class="flex justify-between items-center mb-2"><h3 class="font-bold text-green-900">💸 Gastos Extras / Compras</h3><button onclick="openExtraModal()" class="text-xs bg-green-200 text-green-900 px-2 py-1 rounded">+ Novo</button></div><div class="bg-white rounded p-2 border">${extrasHtml || '<span class="text-xs text-gray-400 italic">Sem gastos extras.</span>'}</div></div>
+                    <div class="mb-10"><h3 class="font-magic text-xl text-magic-blue mb-2">Diário de Bordo ✍️</h3><textarea class="journal-box" placeholder="Escreva aqui suas memórias, sentimentos e histórias do dia..." onblur="saveJournal('${d.id}', this.value)">${d.journal || ''}</textarea></div>
+                </div>`;
         }
 
-        window.addPackingItem = (e) => { 
-            e.preventDefault(); 
-            const input = document.getElementById('packItemInput'); 
-            const t = appData.trips.find(x => x.id === appState.currentTripId); 
-            if(!t.packingList) t.packingList = []; 
-            t.packingList.push({ text: input.value, checked: false }); 
-            saveData(); 
-            renderPackingList(t); 
-            input.value = ''; 
-        };
+        // --- FUNÇÕES NOVAS ---
+        function moveUnvisited(dayId) {
+            const t = appData.trips.find(x => x.id === currentState.tripId);
+            const currentIdx = t.days.findIndex(d => d.id === dayId);
+            if(currentIdx >= t.days.length - 1) return alert("Este é o último dia!");
+            if(!confirm("Mover pendentes para amanhã?")) return;
+            const currentDay = t.days[currentIdx];
+            const nextDay = t.days[currentIdx + 1];
+            const pending = currentDay.attractions.filter(a => !a.visited);
+            const visited = currentDay.attractions.filter(a => a.visited);
+            if(pending.length === 0) return alert("Nada pendente.");
+            currentDay.attractions = visited;
+            nextDay.attractions = [...nextDay.attractions, ...pending];
+            saveData(); render();
+        }
+        function saveJournal(dayId, text) { const t = appData.trips.find(x => x.id === currentState.tripId); t.days.find(x => x.id === dayId).journal = text; saveData(); }
+        function generateICS() {
+            const t = appData.trips.find(x => x.id === currentState.tripId);
+            let ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//DiarioMagico//PT\n";
+            t.days.forEach(d => {
+                d.attractions.forEach(a => {
+                    const dateStr = d.date.replace(/-/g, '');
+                    let timeStr = "090000"; let desc = a.description || "";
+                    if(a.hours) { const match = a.hours.match(/(\d{1,2}):(\d{2})/); if(match) timeStr = `${match[1].padStart(2,'0')}${match[2]}00`; else desc += ` (${a.hours})`; }
+                    const startDT = `${dateStr}T${timeStr}`;
+                    let endH = parseInt(timeStr.substr(0,2)) + 2;
+                    const endDT = `${dateStr}T${endH.toString().padStart(2,'0')}${timeStr.substr(2)}`;
+                    ics += `BEGIN:VEVENT\nDTSTART:${startDT}\nDTEND:${endDT}\nSUMMARY:${a.name}\nDESCRIPTION:${desc}\nLOCATION:${a.address||''}\nEND:VEVENT\n`;
+                });
+            });
+            ics += "END:VCALENDAR";
+            const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' })); link.download = `Agenda_${t.destination}.ics`; link.click();
+        }
 
-        window.togglePackItem = (i) => { 
-            const t = appData.trips.find(x => x.id === appState.currentTripId); 
-            t.packingList[i].checked = !t.packingList[i].checked; 
-            saveData(); 
-            renderPackingList(t); 
-        };
+        // --- MANTEIGA (FUNÇÕES EXISTENTES) ---
+        function reorderDays(newOrderIds) {
+            const t = appData.trips.find(x => x.id === currentState.tripId);
+            t.days = newOrderIds.map(id => t.days.find(d => d.id === id));
+            const start = new Date(t.startDate);
+            t.days.forEach((d, index) => {
+                const cur = new Date(start); cur.setDate(start.getDate() + index); d.date = cur.toISOString().split('T')[0];
+                if (!d.customTitle || d.customTitle.startsWith('Dia ')) d.customTitle = `Dia ${index + 1}`;
+            });
+            saveData(); render();
+        }
+        function switchFinanceTab(tab) { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); event.target.classList.add('active'); document.getElementById('tab-costs').classList.toggle('hidden', tab !== 'costs'); document.getElementById('tab-report').classList.toggle('hidden', tab !== 'report'); if(tab === 'report') renderReport(); }
+        function addInitialCost() { const t = document.getElementById('initType').value; const d = document.getElementById('initDesc').value; const v = document.getElementById('initVal').value; const c = document.getElementById('initCurr').value; if(!d || !v) return alert("Preencha tudo"); const tr = appData.trips.find(x => x.id === currentState.tripId); tr.initialCosts.push({ id: Math.random().toString(36).substr(2, 9), type: t, desc: d, value: parseFloat(v), currency: c }); saveData(); document.getElementById('initDesc').value=''; document.getElementById('initVal').value=''; renderInitialCosts(); }
+        function renderInitialCosts() { const t = appData.trips.find(x => x.id === currentState.tripId); document.getElementById('initialCostsList').innerHTML = t.initialCosts.map((c, i) => `<li class="flex justify-between items-center p-2 bg-white border rounded"><div><span class="font-bold text-sm bg-gray-200 px-1 rounded mr-2">${c.type}</span> ${c.desc}</div><div class="font-mono">${c.currency} ${c.value.toFixed(2)} <button onclick="deleteInitialCost(${i})" class="text-red-500 ml-2">×</button></div></li>`).join(''); }
+        function deleteInitialCost(idx) { const t = appData.trips.find(x => x.id === currentState.tripId); t.initialCosts.splice(idx, 1); saveData(); renderInitialCosts(); }
+        function openExtraModal() { document.getElementById('dayExtraModal').classList.add('active'); }
+        function saveDayExtra() { const d = document.getElementById('extraDesc').value; const v = document.getElementById('extraVal').value; const c = document.getElementById('extraCurr').value; if(!d || !v) return alert("Preencha tudo"); const tr = appData.trips.find(x => x.id === currentState.tripId); const dy = tr.days.find(x => x.id === currentState.dayId); dy.extraCosts.push({ desc: d, value: parseFloat(v), currency: c }); saveData(); document.getElementById('extraDesc').value=''; document.getElementById('extraVal').value=''; closeModals(); render(); }
+        function deleteExtra(idx) { const tr = appData.trips.find(x => x.id === currentState.tripId); const d = tr.days.find(x => x.id === currentState.dayId); d.extraCosts.splice(idx, 1); saveData(); render(); }
+        function editDayTitle(dayId) { const t = appData.trips.find(x => x.id === currentState.tripId); const d = t.days.find(x => x.id === dayId); const newTitle = prompt("Novo título:", d.customTitle || `Dia ${t.days.indexOf(d) + 1}`); if (newTitle) { d.customTitle = newTitle; saveData(); render(); } }
+        function openAttractionModal(aid = null) { currentEditingId = aid; const t = appData.trips.find(x => x.id === currentState.tripId); const d = t.days.find(x => x.id === currentState.dayId); if(aid) { const a = d.attractions.find(x => x.id === aid); document.getElementById('attName').value = a.name; document.getElementById('attType').value = a.type || 'other'; document.getElementById('attHours').value = a.hours || ''; document.getElementById('attAddress').value = a.address || ''; document.getElementById('attDesc').value = a.description || ''; document.getElementById('attPhotos').value = (a.photos || []).join('\n'); tempAttractionCosts = JSON.parse(JSON.stringify(a.costs || [])); document.getElementById('attModalTitle').innerText = "Editar Atração ✏️"; } else { document.getElementById('attName').value = ''; document.getElementById('attHours').value = ''; document.getElementById('attAddress').value = ''; document.getElementById('attDesc').value = ''; document.getElementById('attPhotos').value = ''; tempAttractionCosts = []; document.getElementById('attModalTitle').innerText = "Nova Atração ✨"; } renderTempCosts(); document.getElementById('attractionModal').classList.add('active'); }
+        function addTempCost() { const n = document.getElementById('newCostName').value; const v = document.getElementById('newCostVal').value; const c = document.getElementById('newCostCurr').value; if(n && v) { tempAttractionCosts.push({ name: n, value: v, currency: c }); renderTempCosts(); document.getElementById('newCostName').value=''; document.getElementById('newCostVal').value=''; } }
+        function removeTempCost(i) { tempAttractionCosts.splice(i, 1); renderTempCosts(); }
+        function renderTempCosts() { document.getElementById('attCostsList').innerHTML = tempAttractionCosts.map((c, i) => `<li class="cost-item"><span>${c.name}</span><span>${c.currency} ${c.value} <button onclick="removeTempCost(${i})" class="text-red-500 font-bold ml-2">x</button></span></li>`).join(''); }
+        function saveAttraction() { const n = document.getElementById('attName').value; if(!n) return alert("Nome necessário"); const t = appData.trips.find(x => x.id === currentState.tripId); const d = t.days.find(x => x.id === currentState.dayId); const photos = document.getElementById('attPhotos').value.split('\n').map(p=>p.trim()).filter(p=>p); const data = { id: currentEditingId || Math.random().toString(36).substr(2, 9), name: n, type: document.getElementById('attType').value, hours: document.getElementById('attHours').value, address: document.getElementById('attAddress').value, description: document.getElementById('attDesc').value, photos: photos, costs: tempAttractionCosts, visited: currentEditingId ? d.attractions.find(a => a.id === currentEditingId).visited : false }; if(currentEditingId) d.attractions[d.attractions.findIndex(a => a.id === currentEditingId)] = data; else d.attractions.push(data); saveData(); closeModals(); render(); }
+        function saveKml() { const v = document.getElementById('kmlInput').value; const t = appData.trips.find(x => x.id === currentState.tripId); const d = t.days.find(x => x.id === currentState.dayId); d.kmlUrl = v; saveData(); render(); }
+        function renderMapFrame(url) { let f = url.trim(); if (f.includes('google.com/maps') && (f.includes('/edit') || f.includes('/viewer'))) f = f.replace('/edit', '/embed').replace('/viewer', '/embed'); return `<iframe src="${f}" width="100%" height="100%" style="border:0"></iframe>`; }
+        function openTransportModal() { document.getElementById('outboundSegments').innerHTML = ''; document.getElementById('inboundSegments').innerHTML = ''; addSegment('outboundSegments'); document.getElementsByName('tripType')[0].checked = true; toggleReturnSection(); document.getElementById('transportModal').classList.add('active'); }
+        function toggleReturnSection() { const isRound = document.querySelector('input[name="tripType"]:checked').value === 'round-trip'; document.getElementById('returnSection').classList.toggle('hidden', !isRound); if(isRound && document.getElementById('inboundSegments').children.length === 0) addSegment('inboundSegments'); }
+        function addSegment(cid) { const div = document.createElement('div'); div.className = "grid grid-cols-2 gap-2 mb-2 p-2 bg-gray-100 rounded relative"; div.innerHTML = `<input placeholder="De" class="seg-from w-full p-1 border rounded"><input placeholder="Para" class="seg-to w-full p-1 border rounded"><input type="time" class="seg-time w-full p-1 border rounded"><input placeholder="Meio" class="seg-method w-full p-1 border rounded"><button onclick="this.parentElement.remove()" class="absolute -right-2 -top-2 bg-red-400 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">x</button>`; document.getElementById(cid).appendChild(div); }
+        function saveTransport() { const type = document.querySelector('input[name="tripType"]:checked').value; const getSegs = (id) => Array.from(document.getElementById(id).children).map(d => ({ from: d.querySelector('.seg-from').value, to: d.querySelector('.seg-to').value, time: d.querySelector('.seg-time').value, method: d.querySelector('.seg-method').value })).filter(s => s.from && s.to); const newItem = { id: Math.random().toString(36).substr(2, 9), type, cost: document.getElementById('transCost').value, currency: document.getElementById('transCurr').value, outbound: getSegs('outboundSegments'), inbound: type === 'round-trip' ? getSegs('inboundSegments') : [] }; const t = appData.trips.find(x => x.id === currentState.tripId); const d = t.days.find(x => x.id === currentState.dayId); d.transport.push(newItem); saveData(); closeModals(); render(); }
+        function deleteTransport(id) { if(!confirm("Remover?")) return; const t = appData.trips.find(x => x.id === currentState.tripId); const d = t.days.find(x => x.id === currentState.dayId); d.transport = d.transport.filter(x => x.id !== id); saveData(); render(); }
+        function renderTimeline(segs, label) { if(!segs || !segs.length) return ''; return `<div class="mb-2"><span class="font-bold text-[10px] text-gray-500">${label}</span>` + segs.map(s => `<div class="timeline-item"><div class="timeline-dot"></div> ${s.time} ${s.from} ➝ ${s.to} <small>(${s.method})</small></div>`).join('') + `</div>`; }
+        function openCitySearch() { document.getElementById('cityModal').classList.add('active'); document.getElementById('cityList').innerHTML=''; document.getElementById('citySearchInput').value=''; }
+        function searchCity() { const query = document.getElementById('citySearchInput').value; if(!query) return; fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=pt&format=json`).then(res => res.json()).then(data => { const list = document.getElementById('cityList'); list.innerHTML = ''; if(data.results) { data.results.forEach(city => { const div = document.createElement('div'); div.className = "p-3 border-b hover:bg-blue-50 cursor-pointer flex justify-between items-center"; div.innerHTML = `<span><b>${city.name}</b> <small>(${city.country_code})</small></span>`; div.onclick = () => addLocation(city); list.appendChild(div); }); } else alert("Não encontrado!"); }); }
+        function addLocation(cityData) { const t = appData.trips.find(x => x.id === currentState.tripId); const d = t.days.find(x => x.id === currentState.dayId); d.locations.push({ id: Math.random().toString(36).substr(2, 9), name: `${cityData.name}, ${cityData.country_code}`, lat: cityData.latitude, lng: cityData.longitude }); saveData(); closeModals(); render(); }
+        function deleteLocation(idx) { const t = appData.trips.find(x => x.id === currentState.tripId); const d = t.days.find(x => x.id === currentState.dayId); d.locations.splice(idx, 1); saveData(); render(); }
+        async function fetchWeather(lat, lng, date, elId) { const box = document.getElementById(elId); if(!box) return; try { const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto&start_date=${date}&end_date=${date}`); const data = await res.json(); if(data.daily) box.innerHTML = `🌤 ${Math.round(data.daily.temperature_2m_min[0])}° / ${Math.round(data.daily.temperature_2m_max[0])}°C`; } catch(e) { box.innerHTML = "-"; } }
+        function createTrip() { const n = document.getElementById('newName').value; const ds = document.getElementById('newDest').value; const s = document.getElementById('newStart').value; const e = document.getElementById('newEnd').value; if(!ds || !s || !e) return alert("Preencha tudo!"); const nt = { id: Math.random().toString(36).substr(2, 9), name: n, destination: ds, startDate: s, endDate: e, days: [], initialCosts: [] }; const count = (new Date(e) - new Date(s)) / 86400000 + 1; for(let i=0; i<count; i++) { const cur = new Date(s); cur.setDate(cur.getDate() + i); nt.days.push({ id: Math.random().toString(36).substr(2, 9), date: cur.toISOString().split('T')[0], attractions: [], transport: [], extraCosts: [], locations: [], journal: '' }); } appData.trips.push(nt); saveData(); goTo('home'); }
+        function exportData() { const a = document.createElement('a'); a.href = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData)); a.download = "backup_viagem.json"; a.click(); }
+        function importData(e) { const r = new FileReader(); r.onload = ev => { if(confirm("Substituir?")) { appData = JSON.parse(ev.target.result); saveData(); location.reload(); } }; r.readAsText(e.target.files[0]); }
+        function goTo(p) { currentState.page = p; render(); }
+        function openTrip(id) { currentState.tripId = id; goTo('trip'); }
+        function openDay(tid, did) { currentState.tripId = tid; currentState.dayId = did; goTo('day'); }
+        function closeModals() { document.querySelectorAll('.modal').forEach(m => m.classList.remove('active')); }
+        function hardReset() { if(confirm("Apagar tudo?")) { localStorage.clear(); location.reload(); } }
+        function formatDateBr(d) { if(!d) return ''; const p = d.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; }
+        function deleteTrip(id) { if(confirm("Apagar?")) { appData.trips = appData.trips.filter(t => t.id !== id); saveData(); render(); } }
+        function resetCity() { const t = appData.trips.find(x => x.id === currentState.tripId); const d = t.days.find(x => x.id === currentState.dayId); d.city = null; d.lat = null; d.lng = null; saveData(); render(); }
+        function deleteAttraction(aid) { if(confirm("Apagar?")) { const t = appData.trips.find(x => x.id === currentState.tripId); const d = t.days.find(x => x.id === currentState.dayId); d.attractions = d.attractions.filter(a => a.id !== aid); saveData(); render(); } }
+        function toggleVisited(aid) { const t = appData.trips.find(x => x.id === currentState.tripId); const d = t.days.find(x => x.id === currentState.dayId); const a = d.attractions.find(x => x.id === aid); a.visited = !a.visited; saveData(); render(); }
+        // FUNÇÕES NOVAS
+        function openChecklist() { const t = appData.trips.find(x => x.id === currentState.tripId); const list = document.getElementById('checklistContainer'); list.innerHTML = t.checklist.map((item, i) => `<li class="flex justify-between bg-gray-50 p-2 rounded"><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleCheckItem(${i})"><span class="${item.done ? 'line-through text-gray-400' : ''}">${item.text}</span></label><button onclick="deleteCheckItem(${i})" class="text-red-400 hover:text-red-600">×</button></li>`).join(''); document.getElementById('checklistModal').classList.add('active'); }
+        function addCheckItem(e) { e.preventDefault(); const input = document.getElementById('checkInput'); if(!input.value) return; const t = appData.trips.find(x => x.id === currentState.tripId); t.checklist.push({ text: input.value, done: false }); saveData(); input.value = ''; openChecklist(); }
+        function toggleCheckItem(i) { const t = appData.trips.find(x => x.id === currentState.tripId); t.checklist[i].done = !t.checklist[i].done; saveData(); openChecklist(); }
+        function deleteCheckItem(i) { const t = appData.trips.find(x => x.id === currentState.tripId); t.checklist.splice(i, 1); saveData(); openChecklist(); }
+        function openFinanceModal() { const t = appData.trips.find(x => x.id === currentState.tripId); if(t.rates) { document.getElementById('rateUSD').value = t.rates.USD || ''; document.getElementById('rateEUR').value = t.rates.EUR || ''; document.getElementById('rateGBP').value = t.rates.GBP || ''; } document.getElementById('financeModal').classList.add('active'); switchFinanceTab('report'); renderInitialCosts(); }
+        function saveRates() { const t = appData.trips.find(x => x.id === currentState.tripId); t.rates = { USD: parseFloat(document.getElementById('rateUSD').value) || 0, EUR: parseFloat(document.getElementById('rateEUR').value) || 0, GBP: parseFloat(document.getElementById('rateGBP').value) || 0 }; saveData(); renderReport(); }
+        function renderReport() { const t = appData.trips.find(x => x.id === currentState.tripId); let sunkSums = { BRL:0, USD:0, EUR:0, GBP:0 }; let predicted = { BRL:0, USD:0, EUR:0, GBP:0 }; let actual = { BRL:0, USD:0, EUR:0, GBP:0 }; t.initialCosts.forEach(c => sunkSums[c.currency] += c.value); t.days.forEach(d => { d.transport.forEach(tr => { if(tr.cost && tr.currency) { let val = parseFloat(tr.cost); predicted[tr.currency] += val; actual[tr.currency] += val; } }); d.extraCosts.forEach(ex => { predicted[ex.currency] += ex.value; actual[ex.currency] += ex.value; }); d.attractions.forEach(a => { (a.costs || []).forEach(c => { let val = parseFloat(c.value); predicted[c.currency] += val; if(a.visited) actual[c.currency] += val; }); }); }); let sunkHtml = ''; ['BRL', 'USD', 'EUR', 'GBP'].forEach(c => { if(sunkSums[c] > 0) sunkHtml += `<div class="bg-blue-100 p-2 rounded text-center"><small class="block font-bold">${c}</small>${sunkSums[c].toFixed(2)}</div>`; }); document.getElementById('reportSunkCosts').innerHTML = sunkHtml || '<span class="text-gray-400 text-xs italic col-span-4 text-center">Nenhum custo fixo lançado.</span>'; let html = `<table class="w-full text-left border-collapse"><thead><tr class="bg-gray-100 border-b-2 border-gray-300"><th class="p-2">Moeda</th><th class="p-2 text-blue-800">Previsto</th><th class="p-2 text-green-800">Realizado</th><th class="p-2 text-gray-600">Saldo</th></tr></thead><tbody>`; ['BRL', 'USD', 'EUR', 'GBP'].forEach(curr => { if(predicted[curr] > 0 || actual[curr] > 0) { let diff = predicted[curr] - actual[curr]; html += `<tr class="border-b hover:bg-gray-50"><td class="p-3 font-bold">${curr}</td><td class="p-3 text-blue-700 font-mono">${predicted[curr].toFixed(2)}</td><td class="p-3 text-green-700 font-mono">${actual[curr].toFixed(2)}</td><td class="p-3 font-mono ${diff >= 0 ? 'text-green-600 font-bold' : 'text-red-500 font-bold'}">${diff.toFixed(2)}</td></tr>`; } }); html += `</tbody></table>`; if(!Object.values(predicted).some(v=>v>0)) html = `<p class="text-center text-gray-400 p-4">Nenhum custo variável lançado.</p>`; document.getElementById('reportTable').innerHTML = html; const rates = t.rates || { USD: 0, EUR: 0, GBP: 0 }; let grandTotalBRL = (sunkSums.BRL + predicted.BRL) + (sunkSums.USD + predicted.USD) * (rates.USD || 0) + (sunkSums.EUR + predicted.EUR) * (rates.EUR || 0) + (sunkSums.GBP + predicted.GBP) * (rates.GBP || 0); if(grandTotalBRL > 0) { document.getElementById('reportGrandTotal').innerHTML = `Custo Total Estimado da Viagem: R$ ${grandTotalBRL.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`; } else { document.getElementById('reportGrandTotal').innerHTML = ""; } }
+        function generatePDF() { const t = appData.trips.find(x => x.id === currentState.tripId); const content = document.createElement('div'); content.style.padding = "20px"; content.style.fontFamily = "sans-serif"; let html = `<h1 style="text-align:center; color:#1e3a8a">${t.destination}</h1><h3 style="text-align:center; color:#555">${t.startDate} a ${t.endDate}</h3><hr>`; t.days.forEach((d, i) => { const title = d.customTitle || `Dia ${i+1}`; html += `<div style="page-break-inside: avoid; margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; border-radius: 8px;"><h4 style="margin:0; color:#1e3a8a; background:#eee; padding:5px">${title} - ${formatDateBr(d.date)}</h4>`; if(d.locations.length) html += `<p style="font-size:12px">📍 ${d.locations.map(l=>l.name).join(' & ')}</p>`; if(d.transport.length) html += `<p style="font-size:12px">🚂 <b>Transporte:</b> ${d.transport.length} trechos</p>`; html += `<ul style="font-size:12px; padding-left:20px">`; if(d.attractions.length === 0) html += `<li>Livre</li>`; d.attractions.forEach(a => { html += `<li><b>${a.name}</b> ${a.hours ? `(${a.hours})` : ''}</li>`; }); html += `</ul></div>`; }); content.innerHTML = html; html2pdf().set({ margin: 10, filename: `Roteiro_${t.destination}.pdf` }).from(content).save(); }
 
-        window.deletePackItem = (i) => { 
-            const t = appData.trips.find(x => x.id === appState.currentTripId); 
-            t.packingList.splice(i, 1); 
-            saveData(); 
-            renderPackingList(t); 
-        };
-
-        window.renderBudgetChart = (t) => { 
-            const ctx = document.getElementById('budgetChart'); 
-            if(!ctx) return; 
-            let costs = { 'Transporte': 0, 'Atrações': 0, 'Comida': 0, 'Hospedagem': 0, 'Outros': 0 }; 
-            t.fixedCosts.forEach(c => costs['Transporte'] += c.amount); 
-            t.days.forEach(d => { 
-                d.attractions.forEach(a => { 
-                    if(a.visited) a.costs.forEach(ac => costs['Atrações'] += ac.value); 
-                }); 
-                (d.transport || []).forEach(tr => { 
-                    if(tr.cost) costs['Transporte'] += tr.cost.value; 
-                }); 
-            }); 
-            new Chart(ctx, { 
-                type: 'doughnut', 
-                data: { 
-                    labels: Object.keys(costs), 
-                    datasets: [{ 
-                        data: Object.values(costs), 
-                        backgroundColor: ['#1e3a8a', '#d4af37', '#065f46', '#991b1b', '#64748b'], 
-                        borderWidth: 0 
-                    }] 
-                }, 
-                options: { responsive: true, plugins: { legend: { position: 'right' } } } 
-            }); 
-            const total = Object.values(costs).reduce((a,b)=>a+b,0); 
-            document.getElementById('budgetStats').innerHTML = `
-                <div class="bg-gray-50 p-4 rounded border border-gray-200">
-                    <p class="text-xs font-bold text-gray-500 uppercase">Total Gasto (Estimado)</p>
-                    <p class="text-3xl font-bold text-gray-800">${total.toFixed(2)}</p>
-                </div>
-            `; 
-        };
-
-        window.submitTripForm = (e) => { 
-            e.preventDefault(); 
-            const f = e.target; 
-            const tid = f.dataset.id; 
-            let t = tid ? appData.trips.find(x => x.id === tid) : { id: uuid(), days: [], hotels: [], exchangeRates: [], packingList: [] }; 
-            if(!tid) { 
-                const d1 = new Date(f.startDate.value), d2 = new Date(f.endDate.value); 
-                const count = (d2-d1)/(86400000) + 1; 
-                for(let i=0; i<count; i++) { 
-                    const d = new Date(d1); d.setDate(d1.getDate()+i); 
-                    t.days.push({ id: uuid(), date: d.toISOString().split('T')[0], dateText: `Dia ${i+1}`, attractions: [], transport: [] }); 
-                } 
-                appData.trips.push(t); 
-            } 
-            t.name = f.name.value; t.destination = f.destination.value; t.startDate = f.startDate.value; t.endDate = f.endDate.value; t.coverUrl = f.coverUrl.value; t.mainCurrency = f.mainCurrency.value; t.expectedBudget = parseFloat(f.expectedBudget.value); 
-            saveData(); 
-            showToast('Magia salva!'); 
-            navigate(tid ? 'tripDetail' : 'home', t.id); 
-        };
-
-        window.addTempCost = () => { 
-            const n=document.getElementById('newCostName').value, v=parseFloat(document.getElementById('newCostVal').value), c=document.getElementById('newCostCurr').value; 
-            if(n&&v){ 
-                tempAttractionCosts.push({id:uuid(),name:n,value:v,currency:c}); 
-                renderTempAttractionCosts(); 
-                document.getElementById('newCostName').value=''; document.getElementById('newCostVal').value=''; 
-            } 
-        };
-
-        window.removeTempCost = (i) => { 
-            tempAttractionCosts.splice(i,1); 
-            renderTempAttractionCosts(); 
-        };
-
-        window.renderTempAttractionCosts = () => { 
-            document.getElementById('attCostsList').innerHTML = tempAttractionCosts.map((c,i)=>`
-                <li class="flex justify-between text-xs bg-gray-50 p-1">
-                    <span>${c.name}</span>
-                    <span>${c.currency} ${c.value} <button onclick="removeTempCost(${i})" class="text-red-500 font-bold ml-2">x</button></span>
-                </li>
-            `).join(''); 
-        };
-
-        window.toggleVisited = (aid) => { 
-            const d = appData.trips.find(t=>t.id===appState.currentTripId).days.find(x=>x.id===appState.currentDayId); 
-            const a = d.attractions.find(x => x.id === aid); 
-            a.visited = !a.visited; 
-            saveData(); 
-            window.renderApp(); 
-        };
-
-        window.deleteAttraction = (aid) => window.askConfirm('Remover?', 'Essa magia sumirá.', () => { 
-            const d = appData.trips.find(t=>t.id===appState.currentTripId).days.find(x=>x.id===appState.currentDayId); 
-            d.attractions = d.attractions.filter(a => a.id !== aid); 
-            saveData(); 
-            window.renderApp(); 
-        });
-
-        window.deleteTrip = (id) => window.askConfirm('Queimar Roteiro?', 'Isso não pode ser desfeito.', () => { 
-            appData.trips = appData.trips.filter(t => t.id !== id); 
-            saveData(); 
-            renderHome(document.getElementById('app')); 
-        });
-
-        window.updateDayField = (f, v) => { 
-            const d = appData.trips.find(t=>t.id===appState.currentTripId).days.find(x=>x.id===appState.currentDayId); 
-            d[f] = v; 
-            saveData(); 
-        };
-
-        window.editDayTitle = (did) => { 
-            const d = appData.trips.find(t=>t.id===appState.currentTripId).days.find(x=>x.id===did); 
-            const t = prompt("Novo título:", d.dateText); 
-            if(t) { d.dateText = t; saveData(); window.renderApp(); } 
-        };
-
-        window.reorderDays = (tid, ids) => { 
-            const t = appData.trips.find(x => x.id === tid); 
-            t.days = ids.map(id => t.days.find(d => d.id === id)); 
-            const s = new Date(t.startDate); 
-            t.days.forEach((d,i) => { 
-                const nd = new Date(s); nd.setDate(s.getDate()+i); 
-                d.date = nd.toISOString().split('T')[0]; 
-            }); 
-            saveData(); 
-            window.renderApp(); 
-        };
-
-        window.exportJson = () => { 
-            const a = document.createElement('a'); 
-            a.href = 'data:text/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(appData)); 
-            a.download = 'backup_magico.json'; 
-            a.click(); 
-        };
-
-        window.importJson = (e) => { 
-            const r = new FileReader(); 
-            r.onload = ev => { 
-                try { 
-                    appData = JSON.parse(ev.target.result); 
-                    saveData(); 
-                    location.reload(); 
-                } catch(err){ showToast('Erro no pergaminho', 'error'); } 
-            }; 
-            if(e.target.files[0]) r.readAsText(e.target.files[0]); 
-        };
-
-        window.onload = () => { 
-            loadData(); 
-            renderApp(); 
-        };
+        init();
     </script>
 </body>
 </html>
